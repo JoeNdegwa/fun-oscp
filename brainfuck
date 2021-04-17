@@ -1,0 +1,21 @@
+Reconnaisance
+
+nmap -sC -sV -A 10.10.10.17
+
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 7.2p2 Ubuntu 4ubuntu2.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 94:d0:b3:34:e9:a5:37:c5:ac:b9:80:df:2a:54:a5:f0 (RSA)
+|   256 6b:d5:dc:15:3a:66:7a:f4:19:91:5d:73:85:b2:4c:b2 (ECDSA)
+|_  256 23:f5:a3:33:33:9d:76:d5:f2:ea:69:71:e3:4e:8e:02 (ED25519)
+25/tcp  open  smtp     Postfix smtpd
+|_smtp-commands: brainfuck, PIPELINING, SIZE 10240000, VRFY, ETRN, STARTTLS, ENHANCEDSTATUSCODES, 8BITMIME, DSN, 
+110/tcp open  pop3     Dovecot pop3d
+|_pop3-capabilities: CAPA UIDL SASL(PLAIN) PIPELINING USER TOP AUTH-RESP-CODE RESP-CODES
+143/tcp open  imap     Dovecot imapd
+|_imap-capabilities: have LITERAL+ LOGIN-REFERRALS ENABLE IMAP4rev1 more ID post-login AUTH=PLAINA0001 capabilities Pre-login SASL-IR OK listed IDLE
+443/tcp open  ssl/http nginx 1.10.0 (Ubuntu)
+|_http-server-header: nginx/1.10.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+| ssl-cert: Subject: commonName=brainfuck.htb/organizationName=Brainfuck Ltd./stateOrProvinceName=Attica/countryName=GR
+| Subject Alternative Name: DNS:www.brainfuck.htb, DNS:sup3rs3cr3t.brainfuck.htb
