@@ -1,0 +1,37 @@
+Running nmap full port scan : nmap -p- --min-rate 10000 10.10.10.147
+PORT      STATE    SERVICE
+22/tcp    open     ssh
+80/tcp    open     http
+101/tcp   filtered hostname
+1319/tcp  filtered amx-icsp
+1337/tcp  open     waste
+7393/tcp  filtered nfoldman
+11351/tcp filtered unknown
+14276/tcp filtered unknown
+14713/tcp filtered unknown
+17281/tcp filtered unknown
+17859/tcp filtered unknown
+17950/tcp filtered unknown
+32326/tcp filtered unknown
+32348/tcp filtered unknown
+35540/tcp filtered unknown
+45867/tcp filtered unknown
+46462/tcp filtered unknown
+50279/tcp filtered unknown
+57226/tcp filtered unknown
+57466/tcp filtered unknown
+We visit the site and find it's a default apache installation. Checking the source code we see the below comment :
+<!-- 'myapp' can be downloaded to analyze from here
+     its running on port 1337 -->
+On visiting the site on port 1337, we note the below response:
+ 12:22:01 up 13:49,  0 users,  load average: 0.00, 0.00, 0.00
+
+What do you want me to echo back? GET /myapp HTTP/1.1
+Searching a bit on Google, we realize this is an indicator to ROP buffer overflow.
+We download the myapp as : wget http://10.10.10.147/myapp, check the file using strings and realize it might be C based application. Many functions in the app
+suggests so. Running a file against it gives : "myapp: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked"
+
+We make the app executable "chmod +x myapp" and run it ./myapp and we note it just echoes back what we send it.
+What do you want me to echo back? echo
+echo
+
