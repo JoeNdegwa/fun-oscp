@@ -34,4 +34,17 @@ suggests so. Running a file against it gives : "myapp: ELF 64-bit LSB executable
 We make the app executable "chmod +x myapp" and run it ./myapp and we note it just echoes back what we send it.
 What do you want me to echo back? echo
 echo
+We use python to generate a couple of A's and send it to the program to see if it crushes: "print("A"*150)"
+A hundred and fifty A's crashes the app:
+What do you want me to echo back? AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+Segmentation fault
 
+We need to now generate a pattern we can use gdb or msfpattern for this and then hereafter find the offset.
+
+
+References:
+1. https://bufferoverflows.net/getting-started-with-linux-buffer-overflow/
+2. https://bufferoverflows.net/for-beginners-linux-buffer-overflow-challenge/
+3. https://bufferoverflows.net/ret2libc-exploitation-example/
+4. https://bufferoverflows.net/camp-ctf-2015-bitterman-write-up/
