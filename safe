@@ -40,8 +40,39 @@ What do you want me to echo back? AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 Segmentation fault
 
-We need to now generate a pattern we can use gdb or msfpattern for this and then hereafter find the offset.
-
+We open this binary with gdb for further analysis : "gdb myapp". 
+gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+r2 ./myapp
+[0x00401070]> aaa
+[x] Analyze all flags starting with sym. and entry0 (aa)
+[x] Analyze function calls (aac)
+[x] Analyze len bytes of instructions for references (aar)
+[x] Check for vtables
+[x] Type matching analysis for all functions (aaft)
+[x] Propagate noreturn information
+[x] Use -AA or aaaa to perform additional experimental analysis.
+[0x00401070]> afl
+0x00401070    1 42           entry0
+0x004010b0    4 33   -> 31   sym.deregister_tm_clones
+0x004010e0    4 49           sym.register_tm_clones
+0x00401120    3 33   -> 28   sym.__do_global_dtors_aux
+0x00401150    1 2            entry.init0
+0x00401210    1 1            sym.__libc_csu_fini
+0x00401214    1 9            sym._fini
+0x004011b0    4 93           sym.__libc_csu_init
+0x004010a0    1 1            sym._dl_relocate_static_pie
+0x0040115f    1 78           main
+0x00401040    1 6            sym.imp.system
+0x00401050    1 6            sym.imp.printf
+0x00401060    1 6            sym.imp.gets
+0x00401030    1 6            sym.imp.puts
+0x00401000    3 23           sym._init
+0x00401152    1 10           sym.test
 
 References:
 1. https://bufferoverflows.net/getting-started-with-linux-buffer-overflow/
