@@ -1,0 +1,29 @@
+nmap -sC -sV -A 10.10.10.75
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.2 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 c4:f8:ad:e8:f8:04:77:de:cf:15:0d:63:0a:18:7e:49 (RSA)
+|   256 22:8f:b1:97:bf:0f:17:08:fc:7e:2c:8f:e9:77:3a:48 (ECDSA)
+|_  256 e6:ac:27:a3:b5:a9:f1:12:3c:34:a5:5d:5b:eb:3d:e9 (ED25519)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+|_http-title: Site doesn't have a title (text/html)
+
+Let the nmap full port scan run in the background as I explore the website further : nmap -p- --min-rate 10000 10.10.10.75. Only the two ports open, the
+rest are filtered.
+
+From the website source code I see ; <!-- /nibbleblog/ directory. Nothing interesting here! -->. So I proceed to http://10.10.10.75/nibbleblog/ and
+realize it is powered by Nibbleblog. We proceed to scan for directories :
+gobuster dir -u http://10.10.10.75/nibbleblog/ -w /usr/share/wordlists/directory-list-2.3-medium.txt -x php
+/index.php            (Status: 200) 
+/sitemap.php          (Status: 200)
+/content              (Status: 301) 
+/themes               (Status: 301)  
+/feed.php             (Status: 200)                                             
+/admin                (Status: 301)  
+/admin.php            (Status: 200)                                            
+/plugins              (Status: 301) 
+/install.php          (Status: 200)                                               
+/update.php           (Status: 200)                                          
+/README               (Status: 200)                                            
+/languages            (Status: 301)
