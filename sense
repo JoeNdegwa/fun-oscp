@@ -1,0 +1,37 @@
+nmap scan : 
+PORT    STATE SERVICE    VERSION
+80/tcp  open  http       lighttpd 1.4.35
+|_http-server-header: lighttpd/1.4.35
+|_http-title: Did not follow redirect to https://10.10.10.60/
+443/tcp open  ssl/https?
+| ssl-cert: Subject: commonName=Common Name (eg, YOUR name)/organizationName=CompanyName/stateOrProvinceName=Somewhere/countryName=US
+| Not valid before: 2017-10-14T19:21:35
+|_Not valid after:  2023-04-06T19:21:35
+|_ssl-date: TLS randomness does not represent time
+
+Visiting the site we are redirected to the https site  and we are met by a login page. We try the default admin:pfsense but we have no success.
+So, we proceed to run a gobuster to see what we can find here.
+└─# gobuster dir -u https://10.10.10.60 -w /usr/share/seclists/Discovery/Web-Content/common.txt -k -x php
+/classes              
+/css                      
+/edit.php                                             
+/exec.php                                             
+/favicon.ico                                          
+/graph.php                                            
+/help.php                                             
+/includes             
+/index.html                                             
+/index.php                                             
+/index.php                                             
+/installer            
+/javascript           
+/license.php                                             
+/pkg.php
+/status.php
+/stats.php
+/system.php
+/themes
+/tree
+/widgets
+/xmlrpc.php
+
