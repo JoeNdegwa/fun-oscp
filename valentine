@@ -1,0 +1,34 @@
+Running nmap : nmap -sC -sV -A 10.10.10.79
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 5.9p1 Debian 5ubuntu1.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 96:4c:51:42:3c:ba:22:49:20:4d:3e:ec:90:cc:fd:0e (DSA)
+|   2048 46:bf:1f:cc:92:4f:1d:a0:42:b3:d2:16:a8:58:31:33 (RSA)
+|_  256 e6:2b:25:19:cb:7e:54:cb:0a:b9:ac:16:98:c6:7d:a9 (ECDSA)
+80/tcp  open  http     Apache httpd 2.2.22 ((Ubuntu))
+|_http-server-header: Apache/2.2.22 (Ubuntu)
+|_http-title: Site doesn't have a title (text/html).
+443/tcp open  ssl/http Apache httpd 2.2.22 ((Ubuntu))
+|_http-server-header: Apache/2.2.22 (Ubuntu)
+|_http-title: Site doesn't have a title (text/html).
+| ssl-cert: Subject: commonName=valentine.htb/organizationName=valentine.htb/stateOrProvinceName=FL/countryName=US
+| Not valid before: 2018-02-06T00:45:25
+|_Not valid after:  2019-02-06T00:45:25
+|_ssl-date: 2021-04-27T09:25:42+00:00; +5m10s from scanner time.
+
+Visiting the site we are greeted with a valentine image. We download it to analyse further as we run gobuster in the background.
+
+gobuster dir -u http://10.10.10.79 -w /usr/share/wordlists/directory-list-2.3-medium.txt -x txt,php
+/index
+/index.php
+/dev
+We see some notes under https://10.10.10.79/dev/notes.txt and a key following http://10.10.10.79/dev/hype_key
+
+To do:
+
+1) Coffee.
+2) Research.
+3) Fix decoder/encoder before going live.
+4) Make sure encoding/decoding is only done client-side.
+5) Don't use the decoder/encoder until any of this is done.
+6) Find a better way to take notes.
