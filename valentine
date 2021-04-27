@@ -22,6 +22,9 @@ gobuster dir -u http://10.10.10.79 -w /usr/share/wordlists/directory-list-2.3-me
 /index
 /index.php
 /dev
+/encode
+/decode
+/server-status
 We see some notes under https://10.10.10.79/dev/notes.txt and a key following http://10.10.10.79/dev/hype_key
 
 To do:
