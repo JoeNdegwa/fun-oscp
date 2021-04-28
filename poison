@@ -43,4 +43,19 @@ unzip secret.zip
 Archive:  secret.zip
 [secret.zip] secret password: Charix!2#4%6&8(0
 
+Sockstat is a versatile command line utility used for displaying network and system opened sockets in FreeBSD.
+And so I run sockstat -4 -l and of interest is the below service running as root
+root     Xvnc       529   1  tcp4   127.0.0.1:5901        *:*
+root     Xvnc       529   3  tcp4   127.0.0.1:5801        *:*
+Xvnc is the Unix VNC server, which is based on a standard X server. Applications can display themselves on it as if it were a normal X display,
+but they will actually appear on any connected VNC viewers rather than on a physical screen. So Xvnc is really two servers in one.
+
+We need to port knock here so that port 5901 is exposed to our local machine.
+
+ssh -L 5901:localhost:5901 -N -f -l charix 10.10.10.84
+vncviewer localhost:5901 => authentication failed
+└─# vncviewer localhost:5901 -passwd secret
+And root user is pawned!
+
+
 
