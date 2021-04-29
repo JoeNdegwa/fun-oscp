@@ -1,0 +1,20 @@
+I start with an nmap scan :
+─# nmap -sC -sV -A 10.10.10.76
+PORT    STATE SERVICE VERSION
+79/tcp  open  finger  Sun Solaris fingerd
+|_finger: No one logged on\x0D
+111/tcp open  rpcbind 2-4 (RPC #100000)
+I proceed to run a full nmap scan as I dig deeper on these two ports found.
+└─# nmap -p- --min-rate 10000 10.10.10.76
+PORT      STATE SERVICE
+79/tcp    open  finger
+111/tcp   open  rpcbind
+22022/tcp open  ssh     SunSSH 1.3 (protocol 2.0)
+47654/tcp open  unknown
+48254/tcp open  rpcbind
+
+Trying various manual enumerations didn't yield much fruits so I run metasploit finger scan:
+└─# msf6 auxiliary(scanner/finger/finger_users) > run
+[+] 10.10.10.76:79        - 10.10.10.76:79 Users found: adm, bin, daemon, dladm, gdm, listen, lp, mysql, noaccess, 
+nobody, nobody4, nuucp, openldap, postgres, root, svctag, sys, uucp, xvm
+
