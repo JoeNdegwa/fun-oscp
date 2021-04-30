@@ -1,0 +1,17 @@
+I start with an nmap scan : 
+└─# nmap -sC -sV -A 10.10.10.56
+PORT     STATE SERVICE VERSION
+80/tcp   open  http    Apache httpd 2.4.18 ((Ubuntu))
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+|_http-title: Site doesn't have a title (text/html).
+2222/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.2 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 c4:f8:ad:e8:f8:04:77:de:cf:15:0d:63:0a:18:7e:49 (RSA)
+|   256 22:8f:b1:97:bf:0f:17:08:fc:7e:2c:8f:e9:77:3a:48 (ECDSA)
+|_  256 e6:ac:27:a3:b5:a9:f1:12:3c:34:a5:5d:5b:eb:3d:e9 (ED25519)
+Only two ports open, so I proceed to run a full nmap port scan:
+└─# nmap -p- --min-rate 10000 10.10.10.56
+Again only two ports above are open.
+
+I now proceed to the website but I do not see many hints. So I start off a gobuster:
+└─# gobuster dir -u http://10.10.10.56 -w /usr/share/seclists/Discovery/Web-Content/common.txt -x txt,php,html
