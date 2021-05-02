@@ -15,3 +15,11 @@ Again only two ports above are open.
 
 I now proceed to the website but I do not see many hints. So I start off a gobuster:
 └─# gobuster dir -u http://10.10.10.56 -w /usr/share/seclists/Discovery/Web-Content/common.txt -x txt,php,html
+/.hta                 (Status: 403) [Size: 290]
+/.htaccess            (Status: 403) [Size: 295]
+/.htpasswd            (Status: 403) [Size: 295]
+/cgi-bin/             (Status: 403) [Size: 294]
+/index.html           (Status: 200) [Size: 137]
+
+The cgi-bin is the only one that stands out and with the idea that this box is called shocker. I decide to dig deeper:
+└─# gobuster dir -u http://10.10.10.56/cgi-bin -w /usr/share/seclists/Discovery/Web-Content/common.txt
