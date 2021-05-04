@@ -1,0 +1,19 @@
+└─# nmap -sC -sV 10.10.10.43
+PORT    STATE SERVICE  VERSION
+80/tcp  open  http     Apache httpd 2.4.18 ((Ubuntu))
+|_http-title: Site doesn't have a title (text/html).
+443/tcp open  ssl/http Apache httpd 2.4.18 ((Ubuntu))
+|_http-title: 400 Bad Request
+| ssl-cert: Subject: commonName=nineveh.htb/organizationName=HackTheBox Ltd/stateOrProvinceName=Athens/countryName=GR
+| Not valid before: 2017-07-01T15:03:30
+|_Not valid after:  2018-07-01T15:03:30
+|_ssl-date: TLS randomness does not represent time
+| tls-alpn: 
+|_  http/1.1
+
+Running directory bruteforce:
+└─# gobuster dir -u http://10.10.10.43 -w /usr/share/wordlists/directory-list-2.3-medium.txt
+/department           (Status: 301)
+Visiting http://10.10.10.43/department/login.php I am greeted with a login page but no further hints. Checking the source code I see below comment:
+<!-- @admin! MySQL is been installed.. please fix the login page! ~amrois -->
+That gives a hint that we have MySQL running which means PHP,MYSQL and likely a phpmyadmin page also.
