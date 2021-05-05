@@ -23,3 +23,16 @@ That gives a hint that we have MySQL running which means PHP,MYSQL and likely a 
 Bruteforcing password:
 └─# hydra -l 'admin' -P /usr/share/wordlists/rockyou.txt 10.10.10.43 http-post-form "/department/login.php:username=^USER^&password=^PASS^:Invalid"
 [80][http-post-form] host: 10.10.10.43   login: admin   password: 1q2w3e4r5t
+
+The creds above logs me in and am able to access notes and a potential user : http://10.10.10.43/department/manage.php?notes=files/ninevehNotes.txt
+
+Have you fixed the login page yet! hardcoded username and password is really bad idea!
+
+check your serect folder to get in! figure it out! this is your challenge
+
+Improve the db interface.
+~amrois
+
+Am excited to try directory traversal here. This does not work.
+Checking the note, there is hardcoded creds on a login page and there is a secrets folder.
+
