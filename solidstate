@@ -1,0 +1,77 @@
+I start with an nmap scan
+└─# nmap -sC -sV -A 10.10.10.51
+PORT    STATE SERVICE VERSION
+22/tcp  open  ssh     OpenSSH 7.4p1 Debian 10+deb9u1 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 77:00:84:f5:78:b9:c7:d3:54:cf:71:2e:0d:52:6d:8b (RSA)
+|   256 78:b8:3a:f6:60:19:06:91:f5:53:92:1d:3f:48:ed:53 (ECDSA)
+|_  256 e4:45:e9:ed:07:4d:73:69:43:5a:12:70:9d:c4:af:76 (ED25519)
+25/tcp  open  smtp    JAMES smtpd 2.3.2
+|_smtp-commands: solidstate Hello nmap.scanme.org (10.10.14.9 [10.10.14.9]), 
+80/tcp  open  http    Apache httpd 2.4.25 ((Debian))
+|_http-server-header: Apache/2.4.25 (Debian)
+|_http-title: Home - Solid State Security
+110/tcp open  pop3    JAMES pop3d 2.3.2
+119/tcp open  nntp    JAMES nntpd (posting ok)
+
+And running a quick scan for the full ports:
+└─# nmap -p- --min-rate 10000 10.10.10.51
+PORT     STATE SERVICE
+22/tcp   open  ssh
+25/tcp   open  smtp
+80/tcp   open  http
+110/tcp  open  pop3
+119/tcp  open  nntp
+4555/tcp open  rsip
+
+Running gobuster did not reveal much:
+└─# gobuster dir -u http://10.10.10.51 -w /usr/share/wordlists/directory-list-2.3-medium.txt
+/images
+/assets
+
+Client
+└─# telnet 10.10.10.51 25
+Trying 10.10.10.51...
+Connected to 10.10.10.51.
+Escape character is '^]'.
+220 solidstate SMTP Server (JAMES SMTP Server 2.3.2) ready Wed, 5 May 2021 20:59:29 -0400 (EDT)
+Server
+└─# telnet 10.10.10.51 4555
+Trying 10.10.10.51...
+Connected to 10.10.10.51.
+Escape character is '^]'.
+JAMES Remote Administration Tool 2.3.2
+Please enter your login and password
+Login id:
+root
+Password:
+root
+help                                    display this help
+listusers                               display existing accounts
+countusers                              display the number of existing accounts
+adduser [username] [password]           add a new user
+verify [username]                       verify if specified user exist
+deluser [username]                      delete existing user
+setpassword [username] [password]       sets a user's password
+setalias [user] [alias]                 locally forwards all email for 'user' to 'alias'
+showalias [username]                    shows a user's current email alias
+unsetalias [user]                       unsets an alias for 'user'
+setforwarding [username] [emailaddress] forwards a user's email to another email address
+showforwarding [username]               shows a user's current email forwarding
+unsetforwarding [username]              removes a forward
+user [repositoryname]                   change to another user repository
+shutdown                                kills the current JVM (convenient when James is run as a daemon)
+quit                                    close connection
+listusers
+Existing accounts 6
+user: james
+user: ../../../../../../../../etc/bash_completion.d
+user: thomas
+user: john
+user: mindy
+user: mailadmin
+user john
+
+
+Reference
+A guide to exploit James server : https://crimsonglow.ca/~kjiwa/2016/06/exploiting-apache-james-2.3.2.html
