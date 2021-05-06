@@ -1,0 +1,43 @@
+I start off with an nmap scan:
+└─# nmap -sC -sV -A 10.10.10.55
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.2 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 e2:d7:ca:0e:b7:cb:0a:51:f7:2e:75:ea:02:24:17:74 (RSA)
+|   256 e8:f1:c0:d3:7d:9b:43:73:ad:37:3b:cb:e1:64:8e:e9 (ECDSA)
+|_  256 6d:e9:26:ad:86:02:2d:68:e1:eb:ad:66:a0:60:17:b8 (ED25519)
+8009/tcp open  ajp13   Apache Jserv (Protocol v1.3)
+| ajp-methods: 
+|   Supported methods: GET HEAD POST PUT DELETE OPTIONS
+|   Potentially risky methods: PUT DELETE
+|_  See https://nmap.org/nsedoc/scripts/ajp-methods.html
+8080/tcp open  http    Apache Tomcat 8.5.5
+|_http-favicon: Apache Tomcat
+| http-methods: 
+|_  Potentially risky methods: PUT DELETE
+|_http-title: Apache Tomcat/8.5.5 - Error report
+
+I felt there might be more so I went for a full nmap port scan:
+└─# nmap -p- --min-rate 10000 10.10.10.55
+PORT      STATE    SERVICE
+22/tcp    open     ssh
+4300/tcp  filtered corelccam
+8009/tcp  open     ajp13
+8080/tcp  open     http-proxy
+11975/tcp filtered unknown
+20326/tcp filtered unknown
+35015/tcp filtered unknown
+60000/tcp open     unknown
+I got interested with what ajp13   Apache Jserv server is and went to search around a bit. And sure enough as I expected I found a close link between
+this jserv server and tomcat server. A brief narration as below:
+If the AJP port is exposed, Tomcat might be susceptible to the Ghostcat vulnerability. 
+Ghostcat is a LFI vulnerability, but somewhat restricted: only files from a certain path can be pulled. Still, this can include files like
+WEB-INF/web.xml which can leak important information like credentials for the Tomcat interface, depending on the server setup
+
+Directory bruteforcing with the hope to find credentials to tomcat:
+└─# gobuster dir -u http://10.10.10.55:8080 -w /usr/share/wordlists/directory-list-2.3-medium.txt 
+/docs
+/examples
+/manager
+A good reference here:
+https://apkash8.medium.com/hunting-and-exploiting-apache-ghostcat-b7446ef83e74
