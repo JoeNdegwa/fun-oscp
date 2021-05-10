@@ -1,0 +1,19 @@
+I start off with an nmap scan, only one port open here:
+└─# nmap -sC -sV -A 10.10.10.15
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-05-10 15:45 EAT
+Nmap scan report for 10.10.10.15
+Host is up (0.57s latency).
+Not shown: 999 filtered ports
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Microsoft IIS httpd 6.0
+| http-methods: 
+|_  Potentially risky methods: TRACE DELETE COPY MOVE PROPFIND PROPPATCH SEARCH MKCOL LOCK UNLOCK PUT
+|_http-server-header: Microsoft-IIS/6.0
+|_http-title: Under Construction
+| http-webdav-scan: 
+|   Server Date: Mon, 10 May 2021 12:51:27 GMT
+|   Server Type: Microsoft-IIS/6.0
+|   Allowed Methods: OPTIONS, TRACE, GET, HEAD, DELETE, COPY, MOVE, PROPFIND, PROPPATCH, SEARCH, MKCOL, LOCK, UNLOCK
+|   Public Options: OPTIONS, TRACE, GET, HEAD, DELETE, PUT, POST, COPY, MOVE, MKCOL, PROPFIND, PROPPATCH, LOCK, UNLOCK, SEARCH
+|_  WebDAV type: Unknown
+
