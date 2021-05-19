@@ -19,6 +19,15 @@ PORT     STATE SERVICE
 Visiting the website on port 80, I note a redirect to http://helpdesk.delivery.htb/
 
 Now we attempt to access port 8065 at http://10.10.10.222:8065/signup_email
-Create an account on delivery
-Open a ticket using that account email
+Open a ticket using a delivery.htb email
+Copy and paste the reply to email with a delivery.htb and use it to create account on Mattermost
+View ticket by entering id from returned email and email you used to open, You should see a response email as below:
 
+---- Registration Successful ---- Please activate your email by going to: http://delivery.htb:8065/do_verify_email?token=cbue9zzghoxu966tzmr3rn1698mpjqioryewbn8ye647m5tigm5czeejyqhy4969&email=9784010%40delivery.htb ) 
+--------------------- You can sign in from: --------------------- Mattermost lets you share messages and files from your PC or phone, with instant search and archiving. For the best experience, download the apps for PC, Mac, iOS and Android from: https://mattermost.com/download/#mattermostApps ( https://mattermost.com/download/#mattermostApps
+
+This allows us to login using our password and access page on : http://delivery.htb:8065/select_team
+And here on a channel called internal we see:
+@developers Please update theme to the OSTicket before we go live.  Credentials to the server are maildeliverer:Youve_G0t_Mail!
+
+Also please create a program to help us stop re-using the same passwords everywhere.... Especially those that are a variant of "PleaseSubscribe!"
