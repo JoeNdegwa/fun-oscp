@@ -1,0 +1,43 @@
+I start off with an nmap scan:
+└─# nmap -sC -sV -A 10.10.10.229
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-05-21 04:02 EAT
+Nmap scan report for spectra.htb (10.10.10.229)
+Host is up (0.25s latency).
+Not shown: 996 closed ports
+PORT     STATE SERVICE          VERSION
+22/tcp   open  ssh              OpenSSH 8.1 (protocol 2.0)
+| ssh-hostkey: 
+|_  4096 52:47:de:5c:37:4f:29:0e:8e:1d:88:6e:f9:23:4d:5a (RSA)
+80/tcp   open  http             nginx 1.17.4
+|_http-server-header: nginx/1.17.4
+|_http-title: Site doesn't have a title (text/html).
+3306/tcp open  mysql            MySQL (unauthorized)
+|_ssl-cert: ERROR: Script execution failed (use -d to debug)
+|_ssl-date: ERROR: Script execution failed (use -d to debug)
+|_sslv2: ERROR: Script execution failed (use -d to debug)
+|_tls-alpn: ERROR: Script execution failed (use -d to debug)
+|_tls-nextprotoneg: ERROR: Script execution failed (use -d to debug)
+8081/tcp open  blackice-icecap?
+| fingerprint-strings: 
+|   FourOhFourRequest: 
+|     HTTP/1.1 200 OK
+|     Content-Type: text/plain
+|     Date: Fri, 21 May 2021 01:14:12 GMT
+|     Connection: close
+|     Hello World
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Content-Type: text/plain
+|     Date: Fri, 21 May 2021 01:14:11 GMT
+|     Connection: close
+|     Hello World
+|   HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Content-Type: text/plain
+|     Date: Fri, 21 May 2021 01:14:19 GMT
+|     Connection: close
+|_    Hello World
+
+└─# wpscan --url http://10.10.10.229/main
+http://spectra.htb/main/wp-login.php
+└─# wpscan --url http://10.10.10.229/main --passwords /usr/share/wordlists/rockyou.txt --usernames administrator
