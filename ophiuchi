@@ -30,3 +30,23 @@ The below line of code tries to fecth a file from my local server before errorri
 Error message like : Due to security reason this feature has been temporarily on hold. We will soon fix the issue!
 
 Further reference here : https://fmash16.github.io/content/writeups/hackthebox/htb-Ophiuchi.html
+
+======Users flag
+[+] Searching Tomcat users file
+tomcat-users.xml file found: /usr/src/linux-headers-5.4.0-51/scripts/kconfig/tests/no_write_if_dep_unmet/config\n/opt/tomcat/conf/tomcat-users.xml
+<user username="admin" password="whythereisalimit" roles="manager-gui,admin-gui"/>
+  <user username="tomcat" password="<must-be-changed>" roles="tomcat"/>
+  <user username="both" password="<must-be-changed>" roles="tomcat,role1"/>
+  <user username="role1" password="<must-be-changed>" roles="role1"/>
+  
+admin@ophiuchi:~$ id
+uid=1000(admin) gid=1000(admin) groups=1000(admin)
+admin@ophiuchi:~$ cat user.txt
+95aeadaa2bd290d4da47771a9c0d80c0
+admin@ophiuchi:~$ sudo -l
+Matching Defaults entries for admin on ophiuchi:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User admin may run the following commands on ophiuchi:
+    (ALL) NOPASSWD: /usr/bin/go run /opt/wasm-functions/index.go
+  
