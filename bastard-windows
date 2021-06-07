@@ -1,0 +1,25 @@
+I start off with an nmap scan:
+└─# nmap 10.10.10.9
+PORT      STATE SERVICE
+80/tcp    open  http
+135/tcp   open  msrpc
+49154/tcp open  unknown
+
+Visiting the website we realize it is a drupal site. We check the http://10.10.10.9/CHANGELOG.txt and realize it is running version :
+
+Drupal 7.54, 2017-02-01
+-----------------------
+- Modules are now able to define theme engines (API addition:
+  https://www.drupal.org/node/2826480).
+  
+  We proceed to check for known vulnerabilities:
+  └─# searchsploit drupal
+---------------------------------------------- ---------------------------------
+ Exploit Title                                |  Path
+---------------------------------------------- ---------------------------------
+Drupal 7.x Module Services - Remote Code Exec | php/webapps/41564.php
+Drupal < 7.58 - 'Drupalgeddon3' (Authenticate | php/webapps/44557.rb
+
+The ruby script requires metasploit and so we skip it.
+The php script has thre stage exploitation. We visit http://10.10.10.9/rest and get success message back:
+Services Endpoint "rest_endpoint" has been setup successfully.
