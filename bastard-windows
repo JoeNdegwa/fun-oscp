@@ -111,4 +111,5 @@ COM -> recv failed with error: 10038
 
 PS Z:\> powershell -ExecutionPolicy Bypass -File Sherlock.ps1
 
-
+Further Reading
+https://blog.luckolen.xyz/posts/HTB/Bastard
