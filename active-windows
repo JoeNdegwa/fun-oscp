@@ -1,0 +1,71 @@
+I start off with an nmap:
+└─# nmap -sC -sV -v -A 10.10.10.100
+PORT      STATE SERVICE       VERSION
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2021-06-15 02:04:51Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: active.htb, Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+49152/tcp open  msrpc         Microsoft Windows RPC
+49153/tcp open  msrpc         Microsoft Windows RPC
+49154/tcp open  msrpc         Microsoft Windows RPC
+49155/tcp open  msrpc         Microsoft Windows RPC
+49157/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49158/tcp open  msrpc         Microsoft Windows RPC
+Full port scan: └─# nmap -p- --min-rate 10000 10.10.10.100
+PORT      STATE SERVICE
+53/tcp    open  domain
+88/tcp    open  kerberos-sec
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+389/tcp   open  ldap
+445/tcp   open  microsoft-ds
+464/tcp   open  kpasswd5
+593/tcp   open  http-rpc-epmap
+636/tcp   open  ldapssl
+3268/tcp  open  globalcatLDAP
+3269/tcp  open  globalcatLDAPssl
+5722/tcp  open  msdfsr
+9389/tcp  open  adws
+47001/tcp open  winrm
+49152/tcp open  unknown
+49153/tcp open  unknown
+49154/tcp open  unknown
+49155/tcp open  unknown
+49157/tcp open  unknown
+49158/tcp open  unknown
+49169/tcp open  unknown
+49171/tcp open  unknown
+49182/tcp open  unknown
+I need a way of enumerating usernames:
+└─# rpcclient 10.10.10.100 -U%
+rpcclient $> enumdomusers
+Could not initialise samr. Error was NT_STATUS_ACCESS_DENIED
+I move to try and enumerate smb shares:
+└─# smbclient -L 10.10.10.100
+Enter WORKGROUP\root's password: 
+Anonymous login successful
+
+	Sharename       Type      Comment
+	---------       ----      -------
+	ADMIN$          Disk      Remote Admin
+	C$              Disk      Default share
+	IPC$            IPC       Remote IPC
+	NETLOGON        Disk      Logon server share 
+	Replication     Disk      
+	SYSVOL          Disk      Logon server share 
+	Users           Disk      
+SMB1 disabled -- no workgroup available
+I cannot be able to access any shares here.
+I move on to LDAP : Ports 389, 636, 3268, 3269
+└─# ldapsearch -h 10.10.10.100 -x -s base namingcontexts
+#
+dn:
+namingContexts: DC=active,DC=htb
+namingContexts: CN=Configuration,DC=active,DC=htb
+namingContexts: CN=Schema,CN=Configuration,DC=active,DC=htb
+namingContexts: DC=DomainDnsZones,DC=active,DC=htb
+namingContexts: DC=ForestDnsZones,DC=active,DC=htb
