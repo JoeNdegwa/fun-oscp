@@ -69,3 +69,7 @@ namingContexts: CN=Configuration,DC=active,DC=htb
 namingContexts: CN=Schema,CN=Configuration,DC=active,DC=htb
 namingContexts: DC=DomainDnsZones,DC=active,DC=htb
 namingContexts: DC=ForestDnsZones,DC=active,DC=htb
+
+
+Reference:
+https://lanzt.github.io/blog/htb/HackTheBox-Active
