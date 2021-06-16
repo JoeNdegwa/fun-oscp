@@ -1,0 +1,41 @@
+I start off with an nmap scan:
+└─# nmap -sC -sV -A 10.10.10.184
+└─# nmap -sC -sV -A 10.10.10.184
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-06-16 14:58 EAT
+Nmap scan report for 10.10.10.184
+Host is up (0.24s latency).
+Not shown: 992 closed ports
+PORT     STATE SERVICE       VERSION
+21/tcp   open  ftp           Microsoft ftpd
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_01-18-20  12:05PM       <DIR>          Users
+| ftp-syst: 
+|_  SYST: Windows_NT
+22/tcp   open  ssh           OpenSSH for_Windows_7.7 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 b9:89:04:ae:b6:26:07:3f:61:89:75:cf:10:29:28:83 (RSA)
+|   256 71:4e:6c:c0:d3:6e:57:4f:06:b8:95:3d:c7:75:57:53 (ECDSA)
+|_  256 15:38:bd:75:06:71:67:7a:01:17:9c:5c:ed:4c:de:0e (ED25519)
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp  open  microsoft-ds?
+5666/tcp open  tcpwrapped
+6699/tcp open  napster?
+8443/tcp open  ssl/https-alt
+| fingerprint-strings: 
+|   FourOhFourRequest, HTTPOptions, RTSPRequest, SIPOptions: 
+|     HTTP/1.1 404
+|     Content-Length: 18
+|     Document not found
+|   GetRequest: 
+|     HTTP/1.1 302
+|     Content-Length: 0
+|     Location: /index.html
+|     workers
+|_    jobs
+| http-title: NSClient++
+|_Requested resource was /index.html
+| ssl-cert: Subject: commonName=localhost
+| Not valid before: 2020-01-14T13:24:20
+|_Not valid after:  2021-01-13T13:24:20
+|_ssl-date: TLS randomness does not represent time
