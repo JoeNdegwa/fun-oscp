@@ -71,7 +71,7 @@ except:
     print("Could not connect.")
 
 ==============================================================================================================
-Finding Bad Characters
+Finding Bad Characters => \x00\x07\x2e\xa0
 ==============================================================================================================
 I use the command !mona bytearray -b "\x00" to generate a bytearray and exclude the null byte.
 
