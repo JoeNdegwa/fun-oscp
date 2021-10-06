@@ -1,0 +1,22 @@
+I start off with an nmap : nmap -sC -sV 192.168.51.132
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 9c:52:32:5b:8b:f6:38:c7:7f:a1:b7:04:85:49:54:f3 (RSA)
+|   256 d6:13:56:06:15:36:24:ad:65:5e:7a:a1:8c:e5:64:f4 (ECDSA)
+|_  256 1b:a9:f3:5a:d0:51:83:18:3a:23:dd:c4:a9:be:59:f0 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+
+A full port scan yields the same two ports. Now it is time to dig deeper around these two.
+gobuster dir --url http://192.168.51.132/ -w /usr/share/wordlists/directory-list-2.3-medium.txt -x php, txt
+/javascript
+/mini.php
+
+I head over to the mini.php page. I setup a reverse netcat listener and upload a reverse shell script.
+I got a low privilege shell as www-data. All I am able to see are the users on the box and nothing else:
+
+www-data@funbox7:/$ ls home
+ls home
+goat  harry  karla  oracle  sally
