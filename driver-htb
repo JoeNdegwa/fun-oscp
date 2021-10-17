@@ -16,3 +16,5 @@ I test smbclient and rpcclient but I notice I need valid logon credentials.
 
 Visiting the website I find below message : "The site says: “MFP Firmware Update Center. Please enter password for admin”"
 I search on the internet for the default admin password. I could not find it. I tried login with admin:admin and that worked.
+
+There is an upload directory at : http://10.10.11.106/fw_up.php. 
