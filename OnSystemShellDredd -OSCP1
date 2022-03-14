@@ -1,0 +1,40 @@
+I started off with an nmap scan, initially found only one open port;
+
+$ nmap -sC -sV 192.168.64.130
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+|_ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:192.168.64.200
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 4
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+Service Info: OS: Unix
+
+Listing directory does not work. Time to dig deeper and found another open port:
+$ nmap -p- --min-rate=10000 192.168.64.130
+
+PORT      STATE SERVICE
+21/tcp    open  ftp
+61000/tcp open  unknown
+
+Going even deeper on the new port
+$ nmap -sC -sV -p 61000 192.168.64.130    
+
+PORT      STATE SERVICE VERSION
+61000/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 59:2d:21:0c:2f:af:9d:5a:7b:3e:a4:27:aa:37:89:08 (RSA)
+|   256 59:26:da:44:3b:97:d2:30:b1:9b:9b:02:74:8b:87:58 (ECDSA)
+|_  256 8e:ad:10:4f:e3:3e:65:28:40:cb:5b:bf:1d:24:7f:17 (ED25519)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+This might be a good indicator that I need to bruteforce for ssh logon credentials or atleast the ones I can use with ftp.
