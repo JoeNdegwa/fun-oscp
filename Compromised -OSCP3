@@ -1,0 +1,52 @@
+I start off with an nmap scan:
+$ nmap -sC -sV 192.168.55.152
+
+PORT    STATE SERVICE       VERSION
+80/tcp  open  http          Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: IIS Windows Server
+| http-methods: 
+|_  Potentially risky methods: TRACE
+135/tcp open  msrpc         Microsoft Windows RPC
+139/tcp open  netbios-ssn   Microsoft Windows netbios-ssn
+443/tcp open  ssl/http      Microsoft IIS httpd 10.0
+| tls-alpn: 
+|_  http/1.1
+|_http-server-header: Microsoft-IIS/10.0
+|_ssl-date: 2022-03-15T09:08:34+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=PowerShellWebAccessTestWebSite
+| Not valid before: 2021-06-01T08:00:08
+|_Not valid after:  2021-08-30T08:00:08
+|_http-title: IIS Windows Server
+| http-methods: 
+|_  Potentially risky methods: TRACE
+445/tcp open  microsoft-ds?
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2022-03-15T09:07:55
+|_  start_date: N/A
+
+This is a windows box. Running a full port scan reveals the wsman port is open which is a hint that we can enumerate valid credentials maybe hidden in the SMB shares
+
+$ nmap -p- --min-rate=10000 192.168.55.152 
+Not shown: 65528 filtered tcp ports (no-response)
+PORT      STATE SERVICE
+80/tcp    open  http
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+443/tcp   open  https
+445/tcp   open  microsoft-ds
+5985/tcp  open  wsman
+49666/tcp open  unknown
+
+Also scanning if we have any vulnerabilities: nmap --script smb-vuln* -p 139,445 192.168.55.152. None found
+Enumerating null sessions : rpcclient -U "" -N 192.168.55.152. Access is denied
+
+
+
+A quick reference here : https://0xdf.gitlab.io/2018/12/02/pwk-notes-smb-enumeration-checklist-update1.html
