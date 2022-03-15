@@ -19,3 +19,4 @@ $ dirb http:///192.168.55.101
 + http:///192.168.55.101/server-status 
 
 Following the admin page, there is a login page. Next is to trying to bypass the login.
+Trying different sql injection tricks do not yield anything on this page. I proceed to intercept the request using Burp to investigate further.
