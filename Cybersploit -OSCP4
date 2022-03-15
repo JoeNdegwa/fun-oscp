@@ -1,0 +1,26 @@
+I start with an nmap scan:
+$ nmap -sC -sV 192.168.55.92
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 5.9p1 Debian 5ubuntu1.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 01:1b:c8:fe:18:71:28:60:84:6a:9f:30:35:11:66:3d (DSA)
+|   2048 d9:53:14:a3:7f:99:51:40:3f:49:ef:ef:7f:8b:35:de (RSA)
+|_  256 ef:43:5b:d0:c0:eb:ee:3e:76:61:5c:6d:ce:15:fe:7e (ECDSA)
+80/tcp open  http    Apache httpd 2.2.22 ((Ubuntu))
+|_http-title: Hello Pentester!
+|_http-server-header: Apache/2.2.22 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+All port scan reveals that only the two ports are open.
+Checking the site I notice a commented username but nothing else seems to make sense.
+So I proceed to ssh bruteforce using hydra : 
+# hydra -l itsskv -P /root/common.txt 192.168.55.92 -t 4 ssh
+
+This is too slow until I had to look around a little more. 
+Checking the directory bruteforce result there is a /robots and /robots.txt files both return a base64 encoded string
+Y3liZXJzcGxvaXR7eW91dHViZS5jb20vYy9jeWJlcnNwbG9pdH0= decoding it yields the password.
+And that way I get the first flag.
+
+Now onwards, I upload linux privilege escalatiuon suite and run it.
+It highlights that the kernel version 3.13.0 is vulnerable. So I go ahead and run searchsploit on attacking machine.
+There is an ofs.c exploit that already exist. Uploading this on victim machine, compiling and running escalates the privileges to root user.
