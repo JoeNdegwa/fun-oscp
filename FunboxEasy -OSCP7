@@ -1,0 +1,25 @@
+I start off with an nmap scan, followed by a full port scan:
+
+Only ports 22, 80 and 3306 are open.
+
+I visit the site to see if I can find some hints. On the background I have a directory bruteforce running:
+# gobuster dir -u http://192.168.54.111 -w /usr/share/wordlists/dirb/common.txt
+
+/.htpasswd            (Status: 403) [Size: 279]
+/.hta                 (Status: 403) [Size: 279]
+/admin                (Status: 301) [Size: 316] [--> http://192.168.54.111/admin/]
+/.htaccess            (Status: 403) [Size: 279]                                   
+/index.html           (Status: 200) [Size: 10918]                                 
+/index.php            (Status: 200) [Size: 3468]                                  
+/robots.txt           (Status: 200) [Size: 14]                                    
+/server-status        (Status: 403) [Size: 279]                                   
+/secret               (Status: 301) [Size: 317] [--> http://192.168.54.111/secret/]
+/store                (Status: 301) [Size: 316] [--> http://192.168.54.111/store/] 
+ 
+ Deeper directory bruteforcing on /store reveals a login page on /admin subdirectory
+ http://192.168.54.111/store/admin.php
+ 
+ A simple combination admin:admin logs us in.  The landing page is on http://192.168.54.111/store/admin_book.php
+ There are several actions one can test with. Adding a new book, editing or deleting an existing book.
+ 
+ 
