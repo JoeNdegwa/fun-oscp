@@ -1,0 +1,17 @@
+NMAP SCANS
+===================
+PORT     STATE SERVICE
+22/tcp   open  ssh
+25/tcp   open  smtp
+80/tcp   open  http
+389/tcp  open  ldap
+443/tcp  open  https
+5667/tcp open  unknown
+
+EXPLORE PORT 80
+===================
+After visiting the site and clicking around a bit, there is a login page.
+http://192.168.60.136/nagiosxi/index.php#
+I research around a bit for default credentials and nagiosadmin:admin logs me in.
+
+An authenticated RCE gives us access to the system.
