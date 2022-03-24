@@ -14,4 +14,6 @@ After visiting the site and clicking around a bit, there is a login page.
 http://192.168.60.136/nagiosxi/index.php#
 I research around a bit for default credentials and nagiosadmin:admin logs me in.
 
-An authenticated RCE gives us access to the system.
+An authenticated RCE gives us access to the system as root.
+
+And that's it!
