@@ -1,0 +1,51 @@
+NMAP SCAN
+=====================
+# nmap -sC -sV 192.168.58.14
+PORT     STATE SERVICE VERSION
+21/tcp   open  ftp     vsftpd 3.0.3
+22/tcp   open  ssh     OpenSSH 7.9p1 
+Debian 10+deb10u2 (protocol 2.0)| ssh-hostkey: |   
+2048 89:4f:3a:54:01:f8:dc:b6:6e:e0:78:fc:60:a6:de:35 (RSA)|   
+256 dd:ac:cc:4e:43:81:6b:e3:2d:f3:12:a1:3e:4b:a3:22 (ECDSA)|_  256 cc:e6:25:c0:c6:11:9f:88:f6:c4:26:1e:de:fa:e9:8b (ED25519)
+
+80/tcp   open  http    
+http://192.168.68.83/ebook/models
+http://192.168.68.83/ebook/database
+http://192.168.68.83/ebook/template
+
+Apache httpd 2.4.38 ((Debian))
+|_http-title: Katana X|_http-server-header: Apache/2.4.38 (Debian)
+8088/tcp open  http    
+LiteSpeed httpd|_http-title: Katana X|_http-server-header: LiteSpeed
+
+NMAP FULL PORT SCAN
+=====================
+PORT     STATE SERVICE
+21/tcp   open  ftp
+22/tcp   open  ssh
+80/tcp   open  http
+7080/tcp open  empowerid
+8088/tcp open  radan-http
+8715/tcp open  unknown
+
+Directory Scan
+=====================
+# gobuster dir -u http://192.168.68.83 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+/ebook
+
+# gobuster dir -u http://192.168.68.83/ebook -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+http://192.168.68.83/ebook/bootstrap                                                      
+http://192.168.68.83/ebook/controllers
+http://192.168.68.83/ebook/functions 
+http://192.168.68.83/ebook/models
+http://192.168.68.83/ebook/database
+http://192.168.68.83/ebook/template
+
+
+
+
+
+
+
+
+
